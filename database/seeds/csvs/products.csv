@@ -1,0 +1,71 @@
+catalog,core,vendor_id,name,sku,item,desc
+运动心电,1,4,CARDIOVIT CS-200 运动心电图仪,0.030000,CS-200,标配
+运动心电,1,1,CARDIOVIT CS-200 运动心电图仪 心向量,0.030000-V,CS-200,标配+心向量
+运动心电,1,2,CARDIOVIT AT-104PC EXEC EXEC+,0.040000,AT-104PC,标配+EXEC+EXEC PLUS
+运动心电,1,2,CARDIOVIT AT-104PC C EXEC EXEC+,0.040200,AT-104PC PKG,标配+C+EXEC+EXEC PLUS
+心电图机,1,2,CARDIOVIT AT-102 心电图机 +C,0.070000,AT-102,标配+C
+心电图机,1,2,CARDIOVIT AT-102 心电图机 +12导,0.070000-p1,AT-102,标配+12导联
+心电图机,1,2,CARDIOVIT AT-102 心电图机 +SCM+EMC,0.070000-p2,AT-102,标配+C+SCM+EMC
+心电图机,1,2,CARDIOVIT AT-102 心电图机 +SCM,0.070000-p3,AT-102,标配+SCM
+心电图机,1,2,CARDIOVIT AT-102 心电图机 +WLAN,0.070000-p4,AT-102,标配+WLAN
+心电图仪,1,2,CARDIOVIT AT-102 心电图机 +SCM+WLAN,0.075000-p5,AT-102,全配+SCM+WLAN
+心电图机,1,2,CARDIOVIT AT-101 心电图机,0.080000,AT-101,标配
+心电图机,1,2,CARDIOVIT AT-101 心电图机 + C,0.080000-C,AT-101,标配+C
+心电图机,1,2,CARDIOVIT AT-101 心电图机 + SCM,0.080000-S,AT-101,标配+SCM
+心电图机,1,2,CARDIOVIT AT-10 plus 心电图机,0.173000,AT-10plus,标配
+心电图机,1,2,CARDIOVIT AT-10 plus 心电图机+16导联,0.173000-p1,AT-10plus,标配+16导联
+心电图机,1,2,CARDIOVIT AT-10 plus 心电图机+C,0.173000-p2,AT-10plus,标配+C
+心电图机,1,2,CARDIOVIT AT-10 plus 心电图机+C+EXEC,0.173000-p3,AT-10plus,标配+C+EXEC
+心电图机,1,2,CARDIOVIT AT-10 plus 心电图机+C+WLAN,0.173000-p4,AT-10plus,标配+C+WLAN
+软件,1,1,达尔文标配软件,0.281000,Darwin Scanlab Software,标配
+软件,1,1,达尔文标配软件,0.281000-E,Darwin Enterprise software,全配
+软件,1,1,达尔文标配软件,0.281000-P,Darwin Professional Software,高配
+动态血压,1,3,BR-102 plus单管,0.290000,BR-102 PLUS,单管
+动态血压,1,3,BR-102 plus双管,0.290000-D,BR-102 PLUS,双管
+软件,2,2,MT-200软件,0.300000,MT-200,
+运动血压,1,2,运动血压 BP-200 PLUS,0.310000,BP-200 PLUS,标配+固定支架
+肺功能,1,2,SP-1 肺功能仪,0.540000,SP-1,标配2
+除颤仪,1,1,Easy port 除颤仪,0.900000,Easy port,标配
+除颤仪,1,1,Easy port 除颤仪 英文界面,0.900000-E,Easy port,标配-英文界面
+动态心电,1,1,CARDIOVIT FD12 Holter 动态心电图机,1.281010-10,FD12 Holter,标配 10导联
+动态心电,1,1,CARDIOVIT FD12 Holter 动态心电图机,1.281010-3,FD12 Holter,标配 3导联
+动态心电,1,2,MT-101 动态心电,1.300010,MT-101,标配
+动态心电,1,1,CARDIOVIT AR12Plus 动态心电图机,1.350000,AR12Plus,标配
+除颤监护仪,1,1,DEFIGARD 5000 除颤监护仪,1.800250,DG5000,标配
+除颤监护仪,1,1,DEFIGARD 5000 除颤监护仪+12导联线,1.800250-12,DG5000,标配+12导联
+除颤监护仪,1,1,DEFIGARD 5000 除颤监护仪+AED,1.800250-A,DG5000,标配+AED
+除颤监护仪,1,1,DEFIGARD 5000 除颤监护仪+AED+四导联,1.800250-AP,DG5000,标配+AED+PM
+除颤监护仪,1,1,DEFIGARD 5000 除颤监护仪+全配,1.800250-APSN,DG5000,标配+AED+PM+SPO2+NIBP
+除颤监护仪,1,1,DEFIGARD 5000 除颤监护仪+起搏,1.800250-P,DG5000,标配+PM
+传感器,1,2,SP-250 传感器,2.100159,2.100159,USB 口
+运动踏车,1,2,Erogometer 运动踏车 ERG 911 L,2.210057,ERG 911 L,标配+连接线缆
+运动踏车,1,2,Erogometer 上肢功率计 ERG 911 HKE,2.210067,ERG 911 HKE,标配+连接线缆
+运动踏车,1,2,Erogometer 上肢功率计 ERG 911 HKE,2.210067-p1,ERG 911 HKE,标配+血压+血氧+蓝牙传输模块
+运动踏车,1,2,Erogometer 上肢功率计 ERG 911 HKE,2.210067-p2,ERG 911 HKE,标配+血氧+控制软件
+运动踏车,1,2,Erogometer 上肢功率计 ERG 911 HKE,2.210067-p3,ERG 911 HKE,标配+血氧+无线传输+控制软件
+运动踏车,1,2,Erogometer 立式踏车 ERG 911 S PLUS,2.210076,ERG 911 S PLUS,标配+连接线缆
+运动踏车,1,2,Erogometer 运动踏车 ERG 911 S PLUS E,2.210076-p1,ERG 911 S PLUS,标配+连接线缆+电动按钮E-Seated
+运动踏车,1,2,Erogometer 运动踏车 ERG 911 S PLUS B,2.210076-p2,ERG 911 S PLUS,标配+血压
+运动踏车,1,2,Erogometer 运动踏车 ERG 911 S PLUS,2.210076-p2,ERG 911 S PLUS,标配+无线模块
+运动踏车,1,2,Erogometer 运动踏车 ERG 911 S PLUS B,2.210076-p2,ERG 911 S PLUS,标配+血压
+运动踏车,1,2,Erogometer 运动踏车 ERG 911 S PLUS,2.210076-p3,ERG 911 S PLUS,标配+血氧+连接线
+运动踏车,1,2,Erogometer 运动踏车 ERG 911 S PLUS,2.210076-p3,ERG 911 S PLUS,标配+血氧+无线模块
+运动踏车,1,2,Erogometer 运动踏车 ERG 911 S PLUS,2.210076-p4,ERG 911 S PLUS,标配+血氧+血压+蓝牙传输模块
+运动踏车,1,2,Erogometer 宽座踏车 ERG 911 Comfort,2.210103,ERG 911 Comfort,标配+连接线
+运动踏车,1,2,Erogometer 宽座踏车 ERG 911 Comfort,2.210103-p1,ERG 911 Comfort,标配+血氧+连接线
+运动踏车,1,2,Erogometer 宽座踏车 ERG 911 Comfort,2.210103-p2,ERG 911 Comfort,标配+血氧+无线传输
+运动踏车,1,2,Erogometer 宽座踏车 ERG 911 Comfort,2.210103-p3,ERG 911 Comfort,标配+血氧+血压+蓝牙传输模块
+心电,1,1,CARDIOVIT FD12 Holter 动态心电图机,9.200001,FD12 PLUS,标配 3导联
+软件,1,1,智能读卡器,90-01-002,SANA,
+软件,1,1,多口充电器,90-02-005,SANA,
+软件,1,1,加密狗,90-02-006,SANA,
+软件,1,1,无线路由器,90-02-009,SANA,
+软件,1,1,主机,91-01-001,SANA,
+软件,1,1,显示器,91-10-003,SANA,
+软件,1,1,SANA软件 ,98-10-701-4,SANA,四站点
+静息心电,1,1,FRED easy,NULL,1.80021,NULL
+动态血压,1,2,SPIROVIT SP-1,NULL,0.54,NULL
+小肺,1,4,SP-250,NULL,2.100159,NULL
+小肺,1,3,SP-249,NULL,2.100159,NULL
+小肺,1,3,SP-248,NULL,2.100159,NULL
+小肺,1,3,SP-247,NULL,2.100159,NULL
