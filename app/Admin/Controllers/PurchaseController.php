@@ -7,6 +7,7 @@ use App\User;
 use App\Product;
 use App\Stock;
 use App\serials;
+use App\Admin_user;
 use App\Product_stock;
 use Illuminate\Http\Request;
 
@@ -22,6 +23,7 @@ class PurchaseController extends Controller
 {
     use ModelForm;
 
+    private $stock_id = 0;
     /**
      * Index interface.
      *
@@ -31,7 +33,7 @@ class PurchaseController extends Controller
     {
         return Admin::content(function (Content $content) {
 
-            $content->header('header');
+            $content->header('采购列表');
             $content->description('description');
 
             $content->body($this->grid());
@@ -48,7 +50,7 @@ class PurchaseController extends Controller
     {
         return Admin::content(function (Content $content) use ($id) {
 
-            $content->header('header');
+            $content->header('编辑采购单');
             $content->description('description');
 
             $content->body($this->form()->edit($id));
@@ -60,15 +62,24 @@ class PurchaseController extends Controller
      *
      * @return Content
      */
-    public function create()
+    public function create(Request $rq)
     {
-        return Admin::content(function (Content $content) {
+        if($this->stock_id = $rq->get('stock'))
+            return Admin::content(function (Content $content) {
 
-            $content->header('header');
-            $content->description('description');
+                $content->header('新建采购');
+                $content->description('description');
 
-            $content->body($this->form());
-        });
+                $content->body($this->form2());
+            });
+        else
+            return Admin::content(function (Content $content) {
+
+                $content->header('新建采购');
+                $content->description('description');
+
+                $content->body($this->form());
+            });
     }
 
     /**
@@ -108,10 +119,12 @@ class PurchaseController extends Controller
                         //     $line = "<span class='label label-success'>".$product['amount'].":".Product::find($product['product_id'])->name."</span>";
                         //     print $line;
                         //     $dis = $dis + $line;
+                            $p = Product::find($product['product_id']);
                             $line = [
-                                Product::find($product['product_id'])->item,
-                                Product::find($product['product_id'])->desc,
-                                $product['amount']
+                                $p->item,
+                                $p->desc,
+                                '<a href="/admin/serials?product_id='.$p->id.'">'.$product['amount'].'</a>'
+                                // $product['amount']
                             ];
                             $rows[] = $line;
                         }
@@ -145,40 +158,42 @@ class PurchaseController extends Controller
             $form->tab('基本信息', function ($form) {
                 $form->hidden('catalog')->default(1);
                 $form->display('id', 'ID');
-                $form->select('user_id','入库员')->options(function ($id) {
-                    $user = User::find($id);
-
-                    if ($user) {
-                        return [$user->id => $user->name];
-                    }
-                })->ajax('/admin/api/users');
-                $form->select('to_stock_id','入库仓')->options(function($id){
-                    $stock = Stock::find($id);
-                    if($stock){
-                        return [$stock->id => $stock->name];
-                    }
-                })->ajax('/admin/api/stocks')->help('先输入仓库类型:1.海外,2.海关,3.常规,4.返修,5.损耗,6.借机');
+                $form->select('user_id','采购员')->options(
+                    Admin_user::All()->pluck('name', 'id')
+                )->default(Admin::user()->id);
+                $form->select('to_stock_id','入库仓')->options(
+                    Stock::All()->pluck('name', 'id')
+                )->help('先输入仓库类型:1.海外,2.海关,3.常规,4.返修,5.损耗,6.借机');
                 $form->text('invoiceno','发票号');
                 $form->text('contractno','合同编号');
                 $form->text('comment','备注');
                 $form->dateRange('ship_at','arrival_at','货期')->help('请输入发货日期和到货日期');
-            })->tab('主机信息', function ($form) {
-                $form->hasMany('product_stocks', function (Form\NestedForm $form) {
-                    $form->select('product_id')->options(function($id){
-                        $product = Product::find($id);
-                        if($product){
-                            return [$product->id => $product->name];
-                        }
-                    })->ajax('/admin/api/products');
-                    $form->number('amount','数量');
-                });
             });
             // $form->date('arrival_at','到货日期')->help('请输入到货日期');
         });
-
-
-
     }
+
+    protected function form2()
+    {
+        return Admin::form(Transfer::class, function (Form $form) {
+            $form->tab('基本信息', function ($form) {
+                $form->hidden('catalog')->default(1);
+//                $form->display('id', 'ID');
+                $form->select('user_id','采购员')->options(
+                    Admin_user::All()->pluck('name', 'id')
+                )->default(Admin::user()->id);
+                $form->select('to_stock_id','入库仓')->options(
+                    Stock::All()->pluck('name', 'id')
+                )->default($this->stock_id);
+                $form->text('invoiceno','发票号');
+                $form->text('contractno','合同编号');
+                $form->text('comment','备注');
+                $form->dateRange('ship_at','arrival_at','货期')->help('请输入发货日期和到货日期');
+            });
+            // $form->date('arrival_at','到货日期')->help('请输入到货日期');
+        });
+    }
+
     public function list($id)
     {
         $pss = Product_stock::where('transfer_id',$id)->get();

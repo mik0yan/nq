@@ -20,12 +20,13 @@
         "laravelcollective/html":"^5.2.0" 
     },
     "require-dev": {
+        "barryvdh/laravel-debugbar": "^3.1",
         "filp/whoops": "~2.0",
         "fzaninotto/faker": "~1.4",
+        "jacobcyl/ali-oss-storage": "^2.0",
         "mockery/mockery": "0.9.*",
         "phpunit/phpunit": "~6.0",
         "symfony/css-selector": "2.8.*|3.0.*",
-        "jacobcyl/ali-oss-storage": "^2.0",
         "symfony/dom-crawler": "3.1.*"
     },
     "autoload": {

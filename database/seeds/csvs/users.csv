@@ -1,22 +1,2 @@
-id,name,mobile,email,password,rate
-1,田心质,13800138000,bo.ma@abc.com,123456,600
-3,马博,15036075811,san.zhang@abc.com,123456,600
-4,admin,18500358217,1016352055@qq.com,admin,600
-5,会计张艳,13800138000,san.zhang@abc.com,123456,600
-8,商务车仕南,13800138000,shawnche@schillerchina.com,123456,600
-9,供应链陈兵,13800138000,bingchen@schillerchina.com,123456,600
-36,商务陈晨,15036075811,rose@schillerchina.com,123456,600
-37,销售刘杨,13711933222,cat@schillerchina.com,123456,600
-38,测试米宽,13810711376,mikuan@schillerchina.com,123456,600
-39,会计童晶晶,1391123122,che.jing@sce.com,123456,600
-40,工程张立兴,13810123322,zhanglx@me33k.com,123456,600
-41,商务刘媛,13800138000,liuyuan@gmail.com,123456,600
-42,销售李媛,13810221092,liyuan@shce.com,123456,600
-43,高晓茹,13810221092,cat@schillerchina.com,123456,600
-44,天津库管,13810221092,xin.yu@schillerchina.com,123,600
-45,袁红,13810221092,abby@schillerchina.com	,123456,600
-46,陈超,13810221092,paddy@schillerchina.com,123456,600
-47,杨鹏飞,13810221092,zhao.yin@schillerchina.com,123456,600
-48,王兴愉,13810221092,yaoyi@schillerchina.com,123456,600
-49,张梦圆,13810221092,pengfei.yang@schillerchina.com,123456,600
-50,彭莉,13810221092,riva@schillerchina.com,123456,600
+id,username,name,phone,email,password
+37,liu,销售刘杨,13711933222,cat@schillerchina.com,123456

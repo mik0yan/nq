@@ -6,20 +6,19 @@ use Illuminate\Database\Eloquent\Model;
 
 class Product extends Model
 {
-    protected $fillable = ["name","sku","item","desc"];
+    //
+    protected $table = 'products';
 
-    public function product_package()
+    public static function getprice($id)
     {
-        return $this->hasMany(Product_package::class, 'product_id');
+      $product = product::where('id',$id)->first();
+      return $product->price4;
     }
 
-    public function vendor()
+    public static function getbonus($id)
     {
-        return $this->belongsTo(Vendor::class,'vendor_id');
+      $product = product::where('id',$id)->first();
+      return $product->bonus;
     }
 
-    public function product_stocks()
-    {
-        return $this->hasMany(Product_stock::class);
-    }
 }

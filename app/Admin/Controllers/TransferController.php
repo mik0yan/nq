@@ -2,6 +2,7 @@
 
 namespace App\Admin\Controllers;
 
+use App\Admin_user;
 use App\Transfer;
 use App\Purchase;
 use App\User;
@@ -96,7 +97,10 @@ class TransferController extends Controller
 
             $grid->track_id('运单号')->editable('text');
             $grid->user_id('操作人')->display(function($user_id){
-                return User::findOrFail($user_id)->name;
+                if($user_id)
+                    return Admin_user::findOrFail($user_id)->name;
+                else
+                    return '未分配';
             });
             $grid->comment('备注')->editable('textarea');
             $grid->ship_at('发货时间')->editable('date');
@@ -161,7 +165,7 @@ class TransferController extends Controller
                 })->ajax('/admin/api/stocks')->help('先输入仓库类型:1.海外,2.海关,3.常规,4.返修,5.损耗,6.借机');
                 // $form->select('from_stock_id','出库仓')->options('/admin/api/stocks');
                 $form->select('user_id','操作员')->options(function ($id) {
-                    $user = User::find($id);
+                    $user = Admin_user::findorFail($id);
 
                     if ($user) {
                         return [$user->id => $user->name];
@@ -189,7 +193,7 @@ class TransferController extends Controller
     public function users(Request $request)
     {
         $q = $request->get('q');
-        return User::where('name', 'like', "%$q%")->paginate(null, ['id', 'name as text']);
+        return Admin_user::where('name', 'like', "%$q%")->paginate(null, ['id', 'name as text']);
     }
 
     public function stocks(Request $request)

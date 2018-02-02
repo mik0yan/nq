@@ -3,7 +3,12 @@
 namespace App\Admin\Controllers;
 
 use App\Order;
-
+use App\Users;
+use App\client;
+use App\Reward;
+use App\Admin_user;
+use App\agent;
+use App\Admin\Extensions\CheckRow;
 use Encore\Admin\Form;
 use Encore\Admin\Grid;
 use Encore\Admin\Facades\Admin;
@@ -24,8 +29,8 @@ class OrderController extends Controller
     {
         return Admin::content(function (Content $content) {
 
-            $content->header('header');
-            $content->description('description');
+            $content->header('订单列表');
+            $content->description('所有订单列表');
 
             $content->body($this->grid());
         });
@@ -41,8 +46,8 @@ class OrderController extends Controller
     {
         return Admin::content(function (Content $content) use ($id) {
 
-            $content->header('header');
-            $content->description('description');
+            $content->header('编辑订单');
+            $content->description('订单信息编辑');
 
             $content->body($this->form()->edit($id));
         });
@@ -57,8 +62,8 @@ class OrderController extends Controller
     {
         return Admin::content(function (Content $content) {
 
-            $content->header('header');
-            $content->description('description');
+            $content->header('新建订单');
+            $content->description('订单信息');
 
             $content->body($this->form());
         });
@@ -77,13 +82,30 @@ class OrderController extends Controller
             $grid->user()->name('销售员');
             $grid->client()->corp('医院');
             $grid->agent()->corp('代理商');
-            $grid->sum('总价');
+            $grid->sum('总价')->sortable();
             $grid->price('货值');
             $grid->package('运营成本');
             $grid->bonus('毛利');
-            $grid->comment('备注信息')->editable();
+            $grid->comment('备注信息');
             // $grid->created_at();
             $grid->updated_at('结算时间');
+            $grid->actions(function ($actions) {
+                $actions->disableDelete();
+                // 添加操作
+                $order = Order::find($actions->getKey());
+//                $actions->append(new CheckRow($actions->getKey()));
+                if($order->status > 9)
+                {
+                    $actions->disableEdit();
+                }
+                elseif($order->status = 9){
+                    $actions->prepend('<a href="/admin/order/check/'.$actions->getKey().'"ˆ><i class="fa fa-check-square-o"></i></a>');
+
+                }
+
+                $actions->append('<a href=""><i class="fa fa-outdent"></i></a>');
+
+            });
         });
     }
 
@@ -96,10 +118,70 @@ class OrderController extends Controller
     {
         return Admin::form(Order::class, function (Form $form) {
 
-            $form->display('id', 'ID');
+            $form->hidden('id');
+            $form->hidden('status')->value(9);
+//            $form->hidden('rates')->value(9);
+            $form->select('user_id','销售员')->options(
+                Admin_user::All()->pluck('name', 'id')
+            );
+            $form->select('client_id','医院')->options(
+                client::All()->pluck('corp', 'id')
+            );
+            $form->select('agent_id','代理商')->options(
+                agent::All()->pluck('corp', 'id')
+            );
+            $form->currency('sum','总价')->symbol('￥');
+            $form->currency('price','货值')->symbol('￥');
+            $form->currency('package','运营成本')->symbol('￥');
+            $form->textarea('comment','备注信息');
+            $form->date('finished_at','结算日期')->format('YYYY-MM-DD');
+            $form->hidden('bonus');
+//            S10:待授权,S11:授权,S12:授权拒绝,S1,暂存,S2:新建,S3:会签,S4:签章,S5:收款,S6:备货,S7:发货,S8:收货,S9:完成,S0:取消,S20完结
+            $form->saving(function (Form $form) {
 
-            $form->display('created_at', 'Created At');
-            $form->display('updated_at', 'Updated At');
+                $form->bonus = $form->sum - $form->package - $form->price ;
+            });
+
+            $form->saved(function (Form $form) {
+
+            });
+
         });
     }
+
+    public function checkOrder($id)
+    {
+        $order = Order::find($id);
+        $order->status = 20;
+        $order->save();
+        $data = [
+            [
+                'user_id'   => $order->user_id,
+                'stage'     => 1,
+                'order_id'  => $order->id,
+                'status'    => 2,
+                'rate'      => 0.06,
+                'sum'       => 0.06 * $order->price,
+                'created_at'=> $order->finished_at,
+                'updated_at'=> now()
+            ],
+            [
+                'user_id'   => $order->user_id,
+                'stage'     => 1,
+                'order_id'  => $order->id,
+                'status'    => 2,
+                'rate'      => 0.2 ,
+                'sum'       => 0.2 * $order->bonus,
+                'created_at'=> $order->finished_at,
+                'updated_at'=> now()
+            ]
+        ];
+        Reward::unguard();
+        $rewards = Reward::insert($data);
+        Reward::reguard();
+        return redirect('admin/order');
+
+    }
+
+
 }

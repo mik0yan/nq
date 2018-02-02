@@ -6,11 +6,13 @@ Admin::registerAuthRoutes();
 
 Route::group([
     'prefix'        => config('admin.route.prefix'),
+//    'prefix'        => '/',
     'namespace'     => config('admin.route.namespace'),
+//    'namespace'     => 'App\\Admin\\Controllers',
     'middleware'    => config('admin.route.middleware'),
 ], function (Router $router) {
 
-    $router->get('/', 'HomeController@index');
+    $router->get('/', 'StockController@index');
     $router->resource('users', UserController::class);
     $router->resource('stocks', StockController::class);
     $router->resource('products',ProductController::class);
@@ -24,6 +26,8 @@ Route::group([
     $router->resource('scm/repair',RepairController::class);
     $router->resource('vendor',VendorController::class);
     $router->resource('serials',SerialController::class);
+    $router->resource('reward',RewardsController::class);
+    $router->resource('refund',RefundController::class);
 
     $router->get('api/user', 'StockController@user');
 
@@ -41,6 +45,9 @@ Route::group([
     $router->get('product_purchase/{transfer_id}/new' ,'PurchaseController@newline');
     $router->get('product_ship/{transfer_id}/new' ,'ShipController@newline');
 
+    $router->group(['prefix'=>'order'], function (Router $router) {
+        $router->get('check/{id}','OrderController@checkOrder');
+    });
 
     $router->get('stock/{id}' ,'StockController@products');
 

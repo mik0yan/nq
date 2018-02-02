@@ -6,14 +6,9 @@
 
     <table class="table table-striped">
         <tr>
-            <td>{{$from_stock['name']}}</td>
+            <td>发货仓:{{$from_stock['name']}}</td>
             <td>{{$from_stock['address']}}</td>
             <td>发货日期:{{$transfer['ship_at']}}</td>
-        </tr>
-        <tr>
-            <td>{{$to_stock['name']}}</td>
-            <td>{{$to_stock['address']}}</td>
-            <td>收货日期:{{$transfer['arrival_at']}}</td>
         </tr>
         <tr>
             <td>备注信息</td>

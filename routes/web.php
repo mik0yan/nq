@@ -11,10 +11,6 @@
 |
 */
 
-Route::get('/', function () {
-    return view('welcome');
-});
-
-Route::get('/transfer/{id}','TransferController@list');
-
-Route::get('/stock/{id}' ,['uses' => 'StockController@products']);
+//Route::get('/', function () {
+//    return view('welcome');
+//});

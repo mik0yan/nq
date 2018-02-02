@@ -2,6 +2,7 @@
 
 namespace App\Admin\Controllers;
 
+use App\serials;
 use App\Stock;
 use App\User;
 use App\Product;
@@ -31,7 +32,7 @@ class StockController extends Controller
     {
         return Admin::content(function (Content $content) {
 
-            $content->header('header');
+            $content->header('仓库列表');
             $content->description('description');
 
             $content->body($this->grid());
@@ -48,7 +49,7 @@ class StockController extends Controller
     {
         return Admin::content(function (Content $content) use ($id) {
 
-            $content->header('header');
+            $content->header('编辑仓库信息');
             $content->description('description');
 
             $content->body($this->form()->edit($id));
@@ -64,7 +65,7 @@ class StockController extends Controller
     {
         return Admin::content(function (Content $content) {
 
-            $content->header('header');
+            $content->header('新建仓库');
             $content->description('description');
 
             $content->body($this->form());
@@ -82,10 +83,16 @@ class StockController extends Controller
             $grid->actions(function ($actions) {
               $actions->disableDelete();
               // append an action.
-              $actions->append('<a href=""><i class="fa fa-eye"></i></a>');
+//              $actions->append('<a href=""><i class="fa fa-eye"></i>查看</a>');
 
               // prepend an action.
-              $actions->prepend('<a href="/admin/stock/'.$actions->getKey().'"><i class="fa fa-paper-plane"></i></a>');
+                $actions->append('编辑');
+
+                $actions->append('<a href="/admin/stock/'.$actions->getKey().'"><i class="fa fa-eye"></i>盘库</a>');
+                $actions->append('<a href="/admin/purchase/create?stock='.$actions->getKey().'"><i class="fa fa-shopping-cart"></i>采购</a>');
+                $actions->append('<a href="/admin/ship/create?stock='.$actions->getKey().'"><i class="fa fa-truck"></i>发货</a>');
+                $actions->append('<a href="/admin/borrow/create?stock='.$actions->getKey().'"><i class="fa fa-truck"></i>借用</a>');
+                $actions->append('<a href="/admin/borrow/create?stock='.$actions->getKey().'"><i class="fa fa-truck"></i>核销</a>');
             });
 
             $grid->id('ID')->sortable();
@@ -94,7 +101,7 @@ class StockController extends Controller
             $grid->name('仓库名')->editable();
             $grid->user()->name('库管');
             $grid->address('地址')->editable('textarea');
-            $grid->postal_code('邮编')->editable();
+//            $grid->postal_code('邮编')->editable();
             $states = [
                 'on'  => ['value' => 1, 'text' => '加密', 'color' => 'danger'],
                 'off' => ['value' => 2, 'text' => '开放', 'color' => 'success'],
@@ -103,7 +110,7 @@ class StockController extends Controller
             $grid->filter(function($filter){
 
                 // 去掉默认的id过滤器
-                $filter->equal('type')->select([1 => '海外', 2 => '海关', 3 => '常规', 4 => '返修', 5 => '损耗', 6 => '借机']);
+                $filter->equal('type','仓库类型')->select([1 => '海外', 2 => '海关', 3 => '常规', 4 => '返修', 5 => '损耗', 6 => '借机']);
                 // 在这里添加字段过滤器
 
 
@@ -124,13 +131,7 @@ class StockController extends Controller
             $form->display('id', 'ID');
             $form->select('type', '类型')->options([1 => '海外', 2 => '海关', 3 => '常规', 4 => '返修', 5 => '损耗', 6 => '借机']);
             $form->text('name', '仓库名');
-            $form->select('user_id','库管')->options(function ($id) {
-                $user = User::find($id);
-                if ($user) {
-                    return [$user->id => $user->name];
-                }
-            })->ajax('/admin/api/users');
-                 // $form->ckeditor('address');
+            $form->select('user_id','库管')->options(User::all()->pluck('name','id'));
             $form->text('address','地址')->rules('min:3')->placeholder('填写仓库收寄地址');
             $form->text('postal_code','邮编')->placeholder('填写邮政编码');
             $states = [
@@ -182,7 +183,7 @@ class StockController extends Controller
 
         $grouped = Collection::make($a)->groupBy('product_id')->sortBy('product_id');;
         // $grouped = Collection::make($a);
-        // return $grouped;
+//         return $grouped;
         foreach ($grouped as $key=>$product)
         {
             $sum = 0;
@@ -195,10 +196,19 @@ class StockController extends Controller
             if($sum>0)
             {
                 $product = Product::find($key);
+                $ss = serials::where('product_id',$key)->where('stock_id',$stock_id)->pluck('serial_no');
+                $serialss = "";
+                foreach($ss as $s)
+                {
+
+                }
+
+                $b[] = [$product->name,$product->sku,$product->desc,'<a href="/admin/serials?stock_id='.$stock_id.'&product_id='.$key.'">'.$sum.'</a>',$ss];
+//                $b[] = [$product->name,$product->sku,$product->desc,$sum];
             }
-              $b[] = [$product->item,$product->desc,'<a href="/admin/serials?stock_id='.$stock_id.'&product_id='.$key.'">'.$sum.'</a>'];
         }
-        $headers = ['型号','规格','数量'];
+//        return $b;
+        $headers = ['型号','sku','规格','数量','序列号'];
 
         $table = new Table($headers, $b);
 

@@ -2,11 +2,14 @@
 
 namespace App\Admin\Controllers;
 
+use App\Admin_user;
 use App\Transfer;
 use App\User;
 use App\Stock;
-use App\Product;
+use App\serials;
 
+use App\Product;
+use App\Product_stock;
 use Encore\Admin\Form;
 use Encore\Admin\Grid;
 use Encore\Admin\Facades\Admin;
@@ -14,11 +17,12 @@ use Encore\Admin\Layout\Content;
 use Encore\Admin\Widgets\Table;
 use App\Http\Controllers\Controller;
 use Encore\Admin\Controllers\ModelForm;
+use Illuminate\Http\Request;
 
 class ShipController extends Controller
 {
     use ModelForm;
-
+    private $ship_from = 0;
     /**
      * Index interface.
      *
@@ -28,8 +32,8 @@ class ShipController extends Controller
     {
         return Admin::content(function (Content $content) {
 
-            $content->header('header');
-            $content->description('description');
+            $content->header('发货清单');
+            $content->description('发货列表');
 
             $content->body($this->grid());
         });
@@ -45,7 +49,7 @@ class ShipController extends Controller
     {
         return Admin::content(function (Content $content) use ($id) {
 
-            $content->header('header');
+            $content->header('编辑发货清单');
             $content->description('description');
 
             $content->body($this->form()->edit($id));
@@ -57,15 +61,24 @@ class ShipController extends Controller
      *
      * @return Content
      */
-    public function create()
+    public function create(Request $rq)
     {
-        return Admin::content(function (Content $content) {
+        if($this->ship_from = $rq->get('stock'))
+            return Admin::content(function (Content $content) {
 
-            $content->header('header');
+            $content->header('新建发货清单');
             $content->description('description');
 
-            $content->body($this->form());
-        });
+            $content->body($this->form2());
+             });
+        else
+            return Admin::content(function (Content $content) {
+
+                $content->header('新建发货清单');
+                $content->description('description');
+
+                $content->body($this->form());
+            });
     }
 
     /**
@@ -76,6 +89,14 @@ class ShipController extends Controller
     protected function grid()
     {
         return Admin::grid(Transfer::class, function (Grid $grid) {
+            $grid->actions(function ($actions) {
+                $actions->disableDelete();
+                // append an action.
+                $actions->append('<a href=""><i class="fa fa-eye"></i></a>');
+
+                // prepend an action.
+                $actions->prepend('<a href="ship/list/'.$actions->getKey().'"><i class="fa fa-paper-plane"></i></a>');
+            });
             $grid->model()->where('catalog',3);
             $grid->id('ID')->sortable();
             $grid->stock2()->name('出库仓');
@@ -86,7 +107,7 @@ class ShipController extends Controller
             $grid->arrival_at('到货日期')->editable('date');
             $grid->user_id('发货人员')->display(function($user_id){
                 if($user_id)
-                    return User::findOrFail($user_id)->name;
+                    return Admin_user::findOrFail($user_id)->name;
                 else
                     return '未分配';
             });
@@ -122,27 +143,39 @@ class ShipController extends Controller
         return Admin::form(Transfer::class, function (Form $form) {
             $form->hidden('catalog')->default(3);
             $form->display('id', 'ID');
-            $form->select('user_id','出库员')->options(function ($id) {
-                $user = User::find($id);
-
-                if ($user) {
-                    return [$user->id => $user->name];
-                }
-            })->ajax('/admin/api/users');
-            $form->select('from_stock_id','出库仓')->options(function($id){
-                $stock = Stock::find($id);
-                if($stock){
-                    return [$stock->id => $stock->name];
-                }
-            })->ajax('/admin/api/stocks')->help('先输入仓库类型:1.海外,2.海关,3.常规,4.返修,5.损耗,6.借机');
-            $form->text('inviceno','发票号');
+            $form->select('user_id','业务员')->options(
+                Admin_user::All()->pluck('name', 'id')
+            )->default(Admin::user()->id);
+            $form->select('from_stock_id','出库仓')->options(
+                Stock::All()->pluck('name', 'id')
+            )->help('先输入仓库类型:1.海外,2.海关,3.常规,4.返修,5.损耗,6.借机');
             $form->text('contractno','合同编号');
-            $form->text('comment','备注');
+            $form->textarea('comment','备注');
             $form->dateRange('ship_at','arrival_at','货期')->help('请输入发货日期和到货日期');
             // $form->display('created_at', 'Created At');
             // $form->display('updated_at', 'Updated At');
         });
     }
+
+    protected function form2()
+    {
+        return Admin::form(Transfer::class, function (Form $form) {
+            $form->hidden('catalog')->default(3);
+            $form->display('id', 'ID');
+            $form->select('user_id','业务员')->options(
+                Admin_user::All()->pluck('name', 'id')
+            )->default(Admin::user()->id);
+            $form->select('from_stock_id','出库仓')->options(
+                Stock::All()->pluck('name', 'id')
+            )->default($this->ship_from);
+            $form->text('contractno','合同编号');
+            $form->textarea('comment','备注');
+            $form->dateRange('ship_at','arrival_at','货期')->help('请输入发货日期和到货日期');
+            // $form->display('created_at', 'Created At');
+            // $form->display('updated_at', 'Updated At');
+        });
+    }
+
 
     public function list($id)
     {
@@ -193,7 +226,7 @@ class ShipController extends Controller
             array_push($keys,$key);
             array_push($pss,$ps);
         }
-        return  view('ship.new',['product'=>array_combine($keys,$pss),'id'=>$transfer_id]]);
+        return  view('ship.new',['product'=>array_combine($keys,$pss),'id'=>$transfer_id]);
     }
 
     public function storeline(Request $request)
