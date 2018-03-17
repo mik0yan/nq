@@ -8,7 +8,7 @@ use App\Purchase;
 use App\User;
 use App\Stock;
 use App\Product;
-use App\serials;
+use App\Serials;
 use App\Product_stock;
 use Encore\Admin\Form;
 use Encore\Admin\Grid;
@@ -19,6 +19,7 @@ use App\Http\Controllers\Controller;
 use Encore\Admin\Controllers\ModelForm;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Jobs\UpdateStorage;
 
 class TransferController extends Controller
 {
@@ -33,8 +34,8 @@ class TransferController extends Controller
     {
         return Admin::content(function (Content $content) {
 
-            $content->header('header');
-            $content->description('description');
+            $content->header('调拨清单');
+            $content->description('调拨列表');
 
             $content->body($this->grid());
         });
@@ -50,9 +51,8 @@ class TransferController extends Controller
     {
         return Admin::content(function (Content $content) use ($id) {
 
-            $content->header('header');
+            $content->header('编辑调拨单');
             $content->description('description');
-
             $content->body($this->form()->edit($id));
         });
     }
@@ -66,7 +66,7 @@ class TransferController extends Controller
     {
         return Admin::content(function (Content $content) {
 
-            $content->header('header');
+            $content->header('新建调拨单');
             $content->description('description');
 
             $content->body($this->form());
@@ -82,14 +82,15 @@ class TransferController extends Controller
     {
         return Admin::grid(Transfer::class, function (Grid $grid) {
             $grid->actions(function ($actions) {
-              $actions->disableDelete();
+//                $actions->disableDelete();
+//                $actions->disableEdit();
               // append an action.
-              $actions->append('<a href=""><i class="fa fa-eye"></i></a>');
+              $actions->append('<a href="transfer/list/'.$actions->getKey().'"><i class="fa fa-list"></i>货品清单</a>');
 
               // prepend an action.
-              $actions->prepend('<a href="transfer/list/'.$actions->getKey().'"><i class="fa fa-paper-plane"></i></a>');
+//              $actions->prepend('<a href="transfer/list/'.$actions->getKey().'"><i class="fa fa-paper-plane"></i></a>');
             });
-            $grid->model('catalog','>',2);
+            $grid->model()->where('catalog',2)->orderBy('updated_at','desc');
             $grid->id('ID')->sortable();
 
             $grid->stock2()->name('出库仓');
@@ -126,7 +127,9 @@ class TransferController extends Controller
             $grid->filter(function ($filter) {
 
                 // 设置created_at字段的范围查询
-                $filter->in('catalog', '类型')->multipleSelect(['key' => 'value']);
+//                $filter->in('catalog', '类型')->multipleSelect(['key' => 'value']);
+                $filter->equal('user_id','经办人员')->select(Admin_user::all()->pluck('name','id'));
+                $filter->like('comment','备注信息');
 
                 $filter->between('arrival_at', '到达时间')->date();
             });
@@ -143,50 +146,25 @@ class TransferController extends Controller
     protected function form()
     {
         return Admin::form(Transfer::class, function (Form $form) {
-            $form->tab('基本信息', function ($form) {
-                // $form->hidden('catalog')->default(2);
-                $form->display('id', 'ID');
-                $form->select('catalog','类别')->options([
-                    1 =>'采购',
-                    2 =>'发货',
-                    3 =>'移库',
-                ])->default(3);
-                $form->select('from_stock_id','出库仓')->options(function($id){
-                    $stock = Stock::find($id);
-                    if($stock){
-                        return [$stock->id => $stock->name];
-                    }
-                })->ajax('/admin/api/stocks')->help('先输入仓库类型:1.海外,2.海关,3.常规,4.返修,5.损耗,6.借机');
-                $form->select('to_stock_id','入库仓')->options(function($id){
-                    $stock = Stock::find($id);
-                    if($stock){
-                        return [$stock->id => $stock->name];
-                    }
-                })->ajax('/admin/api/stocks')->help('先输入仓库类型:1.海外,2.海关,3.常规,4.返修,5.损耗,6.借机');
-                // $form->select('from_stock_id','出库仓')->options('/admin/api/stocks');
-                $form->select('user_id','操作员')->options(function ($id) {
-                    $user = Admin_user::findorFail($id);
-
-                    if ($user) {
-                        return [$user->id => $user->name];
-                    }
-                })->ajax('/admin/api/users');
-                $form->text('track_id','运单信息');
-                $form->date('arrival_at','到货日期');
-                $form->textarea('comment','备注')->rows(6)->placeholder('填写备注信息');
-                })->tab('主机信息', function ($form) {
-                    $form->hasMany('product_stocks', function (Form\NestedForm $form) {
-                    // $form->number('measure_id');
-                        $form->select('product_id')->options(function($id){
-                            $product = Product::find($id);
-                            if($product){
-                                return [$product->id => $product->name];
-                            }
-                        })->ajax('/admin/api/products');
-                      // $form->select('measure_id','测量项')->options('/api/measures');
-                        $form->number('amount','数量');
-                    });
-                });
+//            $form->hidden('catalog')->default(2);
+            $form->display('id', 'ID');
+            $form->select('catalog','类别')->options([
+                1 =>'采购',
+                2 =>'调拨',
+                3 =>'发货',
+            ])->default(2)->rules('required');
+            $form->select('from_stock_id','出库仓')->options(Stock::all()
+                    ->pluck('name','id'))
+                    ->help('先输入仓库类型:1.海外,2.海关,3.常规,4.返修,5.损耗,6.借机')
+//                    ->default($this->from_stock_id)
+                    ->rules('required');
+            $form->select('to_stock_id','入库仓')->options(Stock::all()->pluck('name','id'))->help('先输入仓库类型:1.海外,2.海关,3.常规,4.返修,5.损耗,6.借机')->rules('required');
+            // $form->select('from_stock_id','出库仓')->options('/admin/api/stocks');
+            $form->select('user_id','操作员')->options(Admin_user::All()->pluck('name','id'))->rules('required');
+            $form->text('track_id','运单信息');
+            $form->date('arrival_at','到货日期')->rules('required');
+//            $form->hidden('catalog')->value(2);
+            $form->textarea('comment','备注')->rows(6)->placeholder('填写备注信息');
 
         });
     }
@@ -244,7 +222,7 @@ class TransferController extends Controller
         $to_stock = Stock::find($transfer->to_stock_id);
         foreach ($pss as $k=>$ps) {
             $product = Product::find($ps['product_id']);
-            $serials = serials::where('transfer_id',$id)
+            $serials = Serials::where('transfer_id',$id)
                             ->where('product_id',$ps['product_id'])
                             ->get();
             array_push($items,[
@@ -287,6 +265,35 @@ class TransferController extends Controller
         return  view('transfer.new',['product'=>array_combine($keys,$pss),'id'=>$transfer_id]);
     }
 
+    public function newline2($transfer_id)
+    {
+        $transfer = Transfer::find($transfer_id);
+        $stock = Stock::find($transfer->from_stock_id);
+//        return array_keys($stock->amountProducts());
+        $products = Product::whereIn('id',array_keys($stock->amountProducts()))->get();
+//        return $products;
+        // $product = Product::pluck('name','id');
+        $groupeds = $products->groupBy('catalog');
+        $keys = [];
+        $pss =[];
+        foreach ($groupeds as $key => $grouped) {
+            $ps = [];
+            foreach($grouped as $item)
+                $ps[$item['id']] = $item['sku'].'-----'.$item['name'];
+            array_push($keys,$key);
+            array_push($pss,$ps);
+        }
+        return  view('transfer.options',['product'=>array_combine($keys,$pss),'id'=>$transfer_id]);
+    }
+
+    public function item(Request $rq, $transfer_id)
+    {
+        $transfer = Transfer::find($transfer_id);
+        $stock = Stock::find($transfer->from_stock_id);
+        return $stock->stockProduct($rq->id);
+//        return  $rq->id;
+    }
+
     public function storeline(Request $request)
     {
         $product_stock =  Product_stock::where('product_id',$request['product_id'])
@@ -297,6 +304,8 @@ class TransferController extends Controller
             $product_stock->product_id = $request['product_id'];
             $product_stock->transfer_id = $request['transfer_id'];
             $product_stock->amount = $request['amount'];
+//            $product_stock->amount = 3;
+
             $product_stock->save();
         }
         else {
@@ -304,19 +313,21 @@ class TransferController extends Controller
             $product_stock->product_id = $request['product_id'];
             $product_stock->transfer_id = $request['transfer_id'];
             $product_stock->amount = $request['amount'];
+            $serials = explode("\r\n",$request['serials']);
+//            $product_stock->amount = 3;
+            $product_stock->remark = implode(',',$serials);
             $product_stock->save();
         }
 
         $serials = explode("\r\n",$request['serials']);
         foreach ($serials as $k => $serial) {
-            $s = serials::where('serial_no',$serial)->where('product_id',$request['product_id'])->first();
-            if($s){
+            if($s = Serials::where('serial_no',$serial)->where('product_id',$request['product_id'])->first()){
                 $s->transfer_id = $request['transfer_id'];
                 $s->stock_id = Transfer::find($request['transfer_id'])->to_stock_id;
                 $s->save();
             }
             else{
-                $s = new serials;
+                $s = new Serials();
                 $s->serial_no = $serial;
                 // $s->comment = $request['product_id'];
                 $s->product_id = $request['product_id'];
@@ -331,5 +342,55 @@ class TransferController extends Controller
         }
         return redirect('admin/transfer/list/'.$request['transfer_id']);
         // return explode("\r\n",$request['serials']);
+    }
+
+    public function storeline2(Request $rq)
+    {
+        $transfer = Transfer::find($rq->transfer_id);
+        $p = Product::find($rq->product_id);
+        if($p->core==1)
+        {
+            $serialnos =  array_filter(array_keys($rq->toArray()),'is_int');
+            if($ps = Product_stock::where('product_id',$rq->product_id)->where('transfer_id',$rq->transfer_id)->first()){
+                $ps->amount += count($serialnos);
+                $ps->save();
+            } else {
+                Product_stock::create([
+                    'product_id' => $rq->product_id,
+                    'transfer_id' => $rq->transfer_id,
+                    'amount' => count($serialnos),
+                    'status' => 3,
+                ]);
+            }
+            foreach ($serialnos as $s)
+            {
+                $serial = Serials::find($s);
+                $serial->transfer_id = $rq->transfer_id;
+                $serial->stock_id = $transfer->to_stock_id;
+                $serial->save();
+            }
+        } else {
+            if($ps = Product_stock::where('product_id',$rq->product_id)->where('transfer_id',$rq->transfer_id)->first()) {
+                $ps->amount = $rq->amount;
+                $ps->save();
+            } else
+            {
+                Product_stock::create([
+                    'product_id' => $rq->product_id,
+                    'transfer_id' => $rq->transfer_id,
+                    'amount' => $rq->amount,
+                    'status' => 3,
+                ]);
+            }
+        }
+        UpdateStorage::dispatch($transfer->from_stock_id);
+        return redirect('admin/transfer/list/'.$rq['transfer_id']);
+
+
+    }
+
+    public function check(Request $rq)
+    {
+        return (Product::find($rq->id)->core==1)?1:2;
     }
 }

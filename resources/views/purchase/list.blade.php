@@ -33,7 +33,7 @@
         <tbody>
         @foreach ($items as $item)
             <tr>
-                <th width="8%">{{ $item['id'] }}</th>
+                <th width="8%"><a href="/admin/product_purchase/{{ $item['id'] }}/del">删除</a></th>
                 <td width="10%">{{ $item['sku'] }}</td>
                 <td width="40%">{{ $item['name'] }}</td>
                 <td width="10%">{{ $item['amount'] }}</td>

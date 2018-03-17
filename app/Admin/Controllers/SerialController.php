@@ -2,7 +2,7 @@
 
 namespace App\Admin\Controllers;
 
-use App\serials;
+use App\Serials;
 use App\Transfer;
 use App\Purchase;
 use App\User;
@@ -29,7 +29,7 @@ class SerialController extends Controller
     {
         return Admin::content(function (Content $content) {
 
-            $content->header('header');
+            $content->header('序列号列表');
             $content->description('description');
 
             $content->body($this->grid());
@@ -46,7 +46,7 @@ class SerialController extends Controller
     {
         return Admin::content(function (Content $content) use ($id) {
 
-            $content->header('header');
+            $content->header('编辑序列号');
             $content->description('description');
 
             $content->body($this->form()->edit($id));
@@ -62,7 +62,7 @@ class SerialController extends Controller
     {
         return Admin::content(function (Content $content) {
 
-            $content->header('header');
+            $content->header('新建序列');
             $content->description('description');
 
             $content->body($this->form());
@@ -76,35 +76,44 @@ class SerialController extends Controller
      */
     protected function grid()
     {
-        return Admin::grid(serials::class, function (Grid $grid) {
-
+        return Admin::grid(Serials::class, function (Grid $grid) {
+            $grid->actions(function ($actions) {
+                $actions->disableDelete();
+                $actions->disableEdit();
+            });
             $grid->id('ID')->sortable();
             $grid->product()->name('产品名');
             $grid->purchase()->invoiceno('发票号');
             $grid->purchase()->ship_at('出厂时间');
             $grid->purchase()->arrival_at('入库时间');
             $grid->purchase_detail('入库仓库')->display(function($purchase){
-                return Stock::find($purchase['to_stock_id'])->name;
+                if($s = Stock::find($purchase['to_stock_id']))
+                {
+                    return $s->name;
+                } else
+                    return null;
             });
             $grid->stock()->name('当前仓库');
             $grid->serial_no('序列号')->editable();
             $grid->comment('备注信息')->editable();
+            $grid->transfer()->comment('发货信息备注')->editable();
             $grid->filter(function($filter){
                 $filter->disableIdFilter();
 
-                $filter->in('stock_id', '仓库')->multipleSelect('/admin/api/stocks');
+                $filter->in('stock_id', '当前仓库')->select(Stock::all()->pluck('name','id'));
 
-                $filter->in('product_id', '产品')->multipleSelect('/admin/api/products');
+                $filter->in('product_id', '产品')->select(Product::all()->pluck('name','id'));
 
-                $filter->in('purchase_id', '采购单')->multipleSelect('/admin/api/purchases');
+                $filter->in('purchase_id', '采购单')->select(Transfer::where('catalog','1')->pluck('invoiceno','id'));
 
-                $filter->in('ship_id', '销售发货单')->multipleSelect('/admin/api/ships');
+                $filter->in('transfer_id', '销售发货单')->select(Transfer::where('catalog','3')->pluck('invoiceno','id'));
 
                 $filter->where(function ($query) {
 
                     $query->where('serial_no', 'like', "%{$this->input}%")
 
-                ;}, '查询序列号');
+                ;
+                }, '查询序列号');
                 // 在这里添加字段过滤器
             });
         });
@@ -117,7 +126,7 @@ class SerialController extends Controller
      */
     protected function form()
     {
-        return Admin::form(serials::class, function (Form $form) {
+        return Admin::form(Serials::class, function (Form $form) {
 
             $form->display('id', 'ID');
             $form->select('product_id','产品')->options(function ($id) {

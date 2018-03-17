@@ -4,7 +4,7 @@ namespace App\Admin\Controllers;
 
 use App\Order;
 use App\Users;
-use App\client;
+use App\Client;
 use App\Reward;
 use App\Admin_user;
 use App\agent;
@@ -105,6 +105,11 @@ class OrderController extends Controller
 
                 $actions->append('<a href=""><i class="fa fa-outdent"></i></a>');
 
+            });
+
+            $grid->filter(function($filter) {
+                $filter->disableIdFilter();
+                $filter->equal('user_id', '销售员')->select(Admin_user::where('is_sale',1)->pluck('name','id'));
             });
         });
     }

@@ -13,11 +13,16 @@
         "flynsarmy/csv-seeder": "1.0.*",
         "laravel/framework": "5.5.*",
         "laravel/tinker": "~1.0",
+        "predis/predis":"master-dev",
         "nesbot/carbon": "~1.21",
-        "phpoffice/phpexcel": "~1.8",
+        "phpoffice/phpspreadsheet": "~1.0",
         "twbs/bootstrap": "4.0.0-beta.2",
-        "illuminate/html":"~5.0",
-        "laravelcollective/html":"^5.2.0" 
+        "laravelcollective/html":"^5.2.0",
+        "phpoffice/phpword": "v0.14.*",
+        "dompdf/dompdf":"master-dev",
+        "mpdf/mpdf":"master-dev",
+        "tecnick.com/tcpdf":"master-dev",
+        "jpgraph/jpgraph":"master-dev"
     },
     "require-dev": {
         "barryvdh/laravel-debugbar": "^3.1",
@@ -61,9 +66,14 @@
             "@php artisan package:discover"
         ]
     },
+    "recommend": {
+        "ext-zip": "*",
+        "ext-gd": "*"
+    },
     "config": {
         "preferred-install": "dist",
         "sort-packages": true,
         "optimize-autoloader": true
     }
+
 }

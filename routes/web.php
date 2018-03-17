@@ -11,6 +11,6 @@
 |
 */
 
-//Route::get('/', function () {
-//    return view('welcome');
-//});
+Route::get('he', function () {
+    return 1;
+});

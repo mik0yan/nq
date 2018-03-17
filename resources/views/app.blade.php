@@ -8,7 +8,7 @@
         <link href="https://web.medkr.com/management/css/reset.css" rel="stylesheet" type="text/css">
         <link rel='stylesheet' href="/css/bootstrap.min.css" type='text/css' media='all'/>
         <link rel='stylesheet' href="/css/all.css" type='text/css' media='all'/>
-
+        <script src="/js/jquery-3.3.1.min.js"></script>
         <title>@yield('title')</title>
     </head>
     <body>

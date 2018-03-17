@@ -3,10 +3,10 @@
 namespace App\Admin\Controllers;
 
 use App\Transfer;
-use App\User;
+//use App\User;
 use App\Product;
 use App\Stock;
-use App\serials;
+use App\Serials;
 use App\Admin_user;
 use App\Product_stock;
 use Illuminate\Http\Request;
@@ -89,16 +89,15 @@ class PurchaseController extends Controller
      */
     protected function grid()
     {
+//        T1:采购,T2:调拨,T3:发货,T4.出借,T6.损耗,T7.返修
         return Admin::grid(Transfer::class, function (Grid $grid) {
             $grid->actions(function ($actions) {
-              $actions->disableDelete();
-              // append an action.
-              $actions->append('<a href=""><i class="fa fa-eye"></i></a>');
-
-              // prepend an action.
-              $actions->prepend('<a href="purchase/list/'.$actions->getKey().'"><i class="fa fa-paper-plane"></i></a>');
+                $actions->disableDelete();
+                $actions->disableEdit();
+                $actions->prepend('<a href="purchase/list/'.$actions->getKey().'"><i class="fa fa-list"></i>货品</a>');
+                $actions->prepend('<a href="document/purchase/'.$actions->getKey().'" target = "_blank" ><i class="fa fa-file-word-o"></i>下载</a>');
             });
-            $grid->model()->where('catalog',1)->orderBy('id','desc');
+            $grid->model()->where('catalog',1)->where('user_id',Admin::user()->id)->orderBy('updated_at','desc');
             $grid->id('ID')->sortable();
             $grid->stock()->name('入库仓库');
             $grid->invoiceno('发票号')->editable('text');
@@ -108,42 +107,48 @@ class PurchaseController extends Controller
             $grid->arrival_at('到货日期')->sortable();
             $grid->user_id('采购人员')->display(function($user_id){
                 if($user_id)
-                    return User::findOrFail($user_id)->name;
+                    return Admin_user::findOrFail($user_id)->name;
                 else
                     return '未分配';
             });
             $grid->comment('备注')->editable('text');
             $grid->product_stocks('商品清单')->display(function ($products){
-                        $rows = [];
-                        foreach($products as $product){
-                        //     $line = "<span class='label label-success'>".$product['amount'].":".Product::find($product['product_id'])->name."</span>";
-                        //     print $line;
-                        //     $dis = $dis + $line;
-                            $p = Product::find($product['product_id']);
-                            $line = [
-                                $p->item,
-                                $p->desc,
-                                '<a href="/admin/serials?product_id='.$p->id.'">'.$product['amount'].'</a>'
-                                // $product['amount']
-                            ];
-                            $rows[] = $line;
-                        }
-                        // return $dis;
-                        $headers = ['型号','规格','数量'];
-                        // $headers = ['Id', 'Email', 'Name', 'Company'];
+                $rows = [];
+                foreach($products as $product){
+                    if($p = Product::find($product['product_id']))
+                    {
+                        $line = [
+                            isSet($p->item)?$p->item:"",
+                            isSet($p->desc)?$p->desc:"",
+                            '<a href="/admin/serials?product_id='.$p->id.'&purchase_id='.$this->getKey().'">'.$product['amount'].'</a>'
+                            // $product['amount']
+                        ];
+                        $rows[] = $line;
+                    }
 
-                        // $rows = [
-                        //     [1, 'labore21@yahoo.com', 'Ms. Clotilde Gibson', 'Goodwin-Watsica'],
-                        //     [2, 'omnis.in@hotmail.com', 'Allie Kuhic', 'Murphy, Koepp and Morar'],
-                        //     [3, 'quia65@hotmail.com', 'Prof. Drew Heller', 'Kihn LLC'],
-                        //     [4, 'xet@yahoo.com', 'William Koss', 'Becker-Raynor'],
-                        //     [5, 'ipsa.aut@gmail.com', 'Ms. Antonietta Kozey Jr.'],
-                        // ];
+                }
+                $headers = ['型号','规格','数量'];
+                $table = new Table($headers, $rows);
+                return $table->render();
+            });
 
-                        $table = new Table($headers, $rows);
-
-                        return $table->render();
+            $grid->filter(function($filter) {
+                $filter->disableIdFilter();
+                $filter->between('ship_at','发货日期')->date();
+                $filter->between('arrival_at','到货日期')->date();
+                $filter->equal('to_stock_id','入库仓库')->select(Stock::all()->pluck('name','id'));
+                $filter->equal('user_id','经办人员')->select(Admin_user::all()->pluck('name','id'));
+                $filter->where(function ($query){
+                    $query->whereHas('product_stock',function($query) {
+                        $query->whereHas('product',function($query) {
+                            $query->where('name', 'like', '%'.$this->input.'%')
+                            ->orwhere('desc', 'like', '%'.$this->input.'%')
+                            ->orwhere('item', 'like', '%'.$this->input.'%')
+                            ->orwhere('sku', 'like', '%'.$this->input.'%');
+                        });
                     });
+                },"物料号或产品名");
+            });
         });
     }
 
@@ -203,7 +208,7 @@ class PurchaseController extends Controller
         $to_stock = Stock::find($transfer->to_stock_id);
         foreach ($pss as $k=>$ps) {
             $product = Product::find($ps['product_id']);
-            $serials = serials::where('transfer_id',$id)
+            $serials = Serials::where('transfer_id',$id)
                             ->where('product_id',$ps['product_id'])
                             ->get();
             array_push($items,[
@@ -248,10 +253,17 @@ class PurchaseController extends Controller
         // return $data;
     }
 
-    public function newline($transfer_id)
+    public function newline(Request $rq, $transfer_id)
     {
         $transfer = Transfer::find($transfer_id);
-        $products = Product::All();
+        if(isSet($rq->q))
+        {
+//            $products = Product::orWhere('name',$rq->q)->orWhere('item',$rq->q)->orWhere('desc',$rq->q)->get();
+            $products = Product::where('name','like','%{$rq->q}%')->orwhere('item','like','%'.$rq->q.'%')->orwhere('sku','like','%'.$rq->q.'%')->orwhere('desc','like','%'.$rq->q.'%')->get();
+//            return $rq->q;
+        } else {
+            $products = Product::All();
+        }
         // $product = Product::pluck('name','id');
         $groupeds = $products->groupBy('catalog');
         $keys = [];
@@ -259,7 +271,7 @@ class PurchaseController extends Controller
         foreach ($groupeds as $key => $grouped) {
             $ps = [];
             foreach($grouped as $item)
-                $ps[$item['id']] = $item['sku'].'-----'.$item['name'];
+                $ps[$item['id']] = $item['sku'].'----'.$item['name'].'----'.$item['desc'];
             array_push($keys,$key);
             array_push($pss,$ps);
         }
@@ -268,52 +280,95 @@ class PurchaseController extends Controller
 
     public function storeline(Request $request)
     {
-        $product_stock =  Product_stock::where('product_id',$request['product_id'])
-            ->where('transfer_id',$request['transfer_id'])
-            ->first();
-
-        $serials = explode("\r\n",$request['serials']);
-
-
-
-        $serials = explode("\r\n",$request['serials']);
-        $amount = 0;
-        foreach ($serials as $k => $serial) {
-            $s = serials::where('serial_no',$serial)->where('product_id',$request['product_id'])->first();
-            $t = Transfer::find($request['transfer_id']);
-            if($s){
-                $s->save();
-            }
-            else{
-                $s = new serials;
-                $s->serial_no = $serial;
-                // $s->comment = $request['product_id'];
-                $s->product_id = $request['product_id'];
-                $s->transfer_id = $request['transfer_id'];
-                $s->purchase_id = $request['transfer_id'];
-                $s->product_at = $t->ship_at;
-                $s->storage_at = $t->arrival_at;
-                $s->stock_id = $t->to_stock_id;
-                $s->save();
-                $amount++;
-                // echo $serial."</br>";
-            }
-        }
-        if($product_stock)
+        $p = Product::find($request->product_id);
+        $t = Transfer::find($request['transfer_id']);
+        if($p->core==1)
         {
-            $product_stock->product_id = $request['product_id'];
-            $product_stock->transfer_id = $request['transfer_id'];
-            $product_stock->amount = $request['amount']>$amount?$request['amount']:$amount;
-            $product_stock->save();
+//            return $request->end;
+            if(($request->begin > 0) && ($request->end > 0))
+            {
+                $arrbegin = explode('.',$request->begin);
+                $sbegin = array_pop($arrbegin);
+                $arrend = explode('.',$request->end);
+                $send = array_pop($arrend);
+                $prefix = substr($request->begin,0,-strlen($sbegin));
+                $serials = [];
+                for($i = $sbegin; $i<=$send;$i++)
+                {
+                    array_push($serials,$prefix.(string) $i);
+                }
+            }   else    {
+                $serials = explode("\r\n",$request['serials']);
+            }
+            foreach ($serials as $k => $serial) {
+                if($s = Serials::where('serial_no',$serial)->where('product_id',$request['product_id'])->first()){
+                    $s->purchase_id = $t->id;
+                    $s->stock_id = $t->to_stock_id;
+                    $s->save();
+                }
+                else{
+                    $s = new Serials;
+                    $s->serial_no = $serial;
+                    $s->product_id = $request['product_id'];
+                    $s->transfer_id = $request['transfer_id'];
+                    $s->purchase_id = $request['transfer_id'];
+                    $s->product_at = $t->ship_at;
+                    $s->storage_at = $t->arrival_at;
+                    $s->stock_id = $t->to_stock_id;
+                    $s->save();
+                }
+            }
+//            return $amount;
+            if($amount = Serials::where('purchase_id',$t->id)->where('product_id',$p->id)->count()){
+                if($product_stock = Product_stock::where('product_id',$request['product_id'])->where('transfer_id',$request['transfer_id'])->first()){
+                    $product_stock->product_id = $request['product_id'];
+                    $product_stock->transfer_id = $request['transfer_id'];
+                    $product_stock->amount = $amount;
+                    $product_stock->save();
+                }
+                else {
+                    $product_stock = new Product_stock;
+                    $product_stock->product_id = $request['product_id'];
+                    $product_stock->transfer_id = $request['transfer_id'];
+                    $product_stock->amount = $amount;
+                    $product_stock->save();
+                }
+            }
+
+
         }
-        else {
-            $product_stock = new Product_stock;
-            $product_stock->product_id = $request['product_id'];
-            $product_stock->transfer_id = $request['transfer_id'];
-            $product_stock->amount = $request['amount']>$amount?$request['amount']:$amount;
-            $product_stock->save();
+        else
+        {
+            if($product_stock = Product_stock::where('product_id',$request['product_id'])->where('transfer_id',$request['transfer_id'])->first()){
+                $product_stock->product_id = $request['product_id'];
+                $product_stock->transfer_id = $request['transfer_id'];
+                $product_stock->amount = $request->amount;
+                $product_stock->save();
+            }
+            else {
+                $product_stock = new Product_stock;
+                $product_stock->product_id = $request['product_id'];
+                $product_stock->transfer_id = $request['transfer_id'];
+                $product_stock->amount = $request->amount;
+                $product_stock->save();
+            }
+
         }
         return redirect('admin/purchase/list/'.$request['transfer_id']);
         // return explode("\r\n",$request['serials']);
+    }
+
+    public function deleteline($id)
+    {
+        $ps = Product_stock::find($id);
+        $tid = $ps-> transfer_id;
+        Serials::where('purchase_id', $tid)->where('product_id',$ps->product_id)->delete();
+        $ps->delete();
+        return redirect('admin/purchase/list/'.$tid);
+    }
+
+    public function check(Request $rq)
+    {
+        return (Product::find($rq->id)->core==1)?1:2;
     }
 }

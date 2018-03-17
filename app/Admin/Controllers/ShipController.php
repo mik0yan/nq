@@ -6,7 +6,7 @@ use App\Admin_user;
 use App\Transfer;
 use App\User;
 use App\Stock;
-use App\serials;
+use App\Serials;
 
 use App\Product;
 use App\Product_stock;
@@ -95,12 +95,13 @@ class ShipController extends Controller
                 $actions->append('<a href=""><i class="fa fa-eye"></i></a>');
 
                 // prepend an action.
-                $actions->prepend('<a href="ship/list/'.$actions->getKey().'"><i class="fa fa-paper-plane"></i></a>');
+                $actions->prepend('<a href="transfer/list/'.$actions->getKey().'"><i class="fa fa-list"></i>货品</a>');
             });
-            $grid->model()->where('catalog',3);
+            $grid->model()->where('catalog',3)->orderBy('updated_at','desc');
             $grid->id('ID')->sortable();
             $grid->stock2()->name('出库仓');
             $grid->inviceno('发票号')->editable('text');
+            $grid->track_id('运单号')->editable('text');
             $grid->contractno('合同编号')->editable('text');
             // $grid->comment('备注')->editable('text');
             $grid->ship_at('发货日期')->editable('date');
@@ -111,14 +112,17 @@ class ShipController extends Controller
                 else
                     return '未分配';
             });
-            $grid->comment('备注')->editable('text');
+            $grid->comment('收货信息')->editable('text');
             $grid->product_stocks('商品清单')->display(function ($products){
-                        $rows = [];
-                        foreach($products as $product){
-                            $line = [
+                $rows = [];
+
+                foreach($products as $product){
+                    $p = Product::find($product['product_id']);
+
+                    $line = [
                                 Product::find($product['product_id'])->item,
                                 Product::find($product['product_id'])->desc,
-                                $product['amount']
+                                '<a href="/admin/serials?product_id='.$p->id.'&transfer_id='.$this->getKey().'">'.$product['amount'].'</a>'
                             ];
                             $rows[] = $line;
                         }
@@ -128,6 +132,24 @@ class ShipController extends Controller
 
                         return $table->render();
                     });
+            $grid->filter(function($filter) {
+//                $filter->disableIdFilter();
+                $filter->between('ship_at','发货日期')->date();
+                $filter->between('arrival_at','到货日期')->date();
+                $filter->like('comment','备注信息');
+
+                $filter->equal('user_id','经办人员')->select(Admin_user::all()->pluck('name','id'));
+                $filter->where(function ($query){
+                    $query->whereHas('product_stock',function($query) {
+                        $query->whereHas('product',function($query) {
+                            $query->where('name', 'like', '%'.$this->input.'%')
+                                ->orwhere('desc', 'like', '%'.$this->input.'%')
+                                ->orwhere('item', 'like', '%'.$this->input.'%')
+                                ->orwhere('sku', 'like', '%'.$this->input.'%');
+                        });
+                    });
+                },"物料号或产品名");
+            });
             // $grid->created_at();
             // $grid->updated_at();
         });
@@ -143,14 +165,15 @@ class ShipController extends Controller
         return Admin::form(Transfer::class, function (Form $form) {
             $form->hidden('catalog')->default(3);
             $form->display('id', 'ID');
-            $form->select('user_id','业务员')->options(
+            $form->select('user_id','发货员')->options(
                 Admin_user::All()->pluck('name', 'id')
             )->default(Admin::user()->id);
             $form->select('from_stock_id','出库仓')->options(
                 Stock::All()->pluck('name', 'id')
             )->help('先输入仓库类型:1.海外,2.海关,3.常规,4.返修,5.损耗,6.借机');
             $form->text('contractno','合同编号');
-            $form->textarea('comment','备注');
+            $form->text('track_id','运单号');
+            $form->textarea('comment','收货信息');
             $form->dateRange('ship_at','arrival_at','货期')->help('请输入发货日期和到货日期');
             // $form->display('created_at', 'Created At');
             // $form->display('updated_at', 'Updated At');
@@ -162,14 +185,15 @@ class ShipController extends Controller
         return Admin::form(Transfer::class, function (Form $form) {
             $form->hidden('catalog')->default(3);
             $form->display('id', 'ID');
-            $form->select('user_id','业务员')->options(
+            $form->select('user_id','发货员')->options(
                 Admin_user::All()->pluck('name', 'id')
             )->default(Admin::user()->id);
             $form->select('from_stock_id','出库仓')->options(
                 Stock::All()->pluck('name', 'id')
             )->default($this->ship_from);
             $form->text('contractno','合同编号');
-            $form->textarea('comment','备注');
+            $form->text('track_id','运单号');
+            $form->textarea('comment','收货信息');
             $form->dateRange('ship_at','arrival_at','货期')->help('请输入发货日期和到货日期');
             // $form->display('created_at', 'Created At');
             // $form->display('updated_at', 'Updated At');
@@ -186,7 +210,7 @@ class ShipController extends Controller
         // $to_stock = Stock::find($transfer->to_stock_id);
         foreach ($pss as $k=>$ps) {
             $product = Product::find($ps['product_id']);
-            $serials = serials::where('transfer_id',$id)
+            $serials = Serials::where('transfer_id',$id)
                             ->where('product_id',$ps['product_id'])
                             ->get();
             array_push($items,[
@@ -251,7 +275,7 @@ class ShipController extends Controller
 
         $serials = explode("\r\n",$request['serials']);
         foreach ($serials as $k => $serial) {
-            $s = serials::where('serial_no',$serial)->where('product_id',$request['product_id'])->first();
+            $s = Serials::where('serial_no',$serial)->where('product_id',$request['product_id'])->first();
             $t = Transfer::find($request['transfer_id']);
             if($s){
                 $s->transfer_id = $request['transfer_id'];
@@ -259,7 +283,7 @@ class ShipController extends Controller
                 $s->save();
             }
             else{
-                $s = new serials;
+                $s = new Serials;
                 $s->serial_no = $serial;
                 // $s->comment = $request['product_id'];
                 $s->product_id = $request['product_id'];
