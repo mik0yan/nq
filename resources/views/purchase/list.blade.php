@@ -21,8 +21,8 @@
         </tr>
     </table>
 
-    <a href="/admin/product_purchase/{{$transfer['id']}}/new" class="btn btn-info" role="button">新增</a>
-    <a href="/admin/purchase" class="btn btn-danger" role="button">返回</a>
+    <a href="/product_purchase/{{$transfer['id']}}/new" class="btn btn-info" role="button">新增</a>
+    <a href="/purchase" class="btn btn-danger" role="button">返回</a>
 
     <table class="table table-striped" width="95%">
         <thead>
@@ -33,7 +33,7 @@
         <tbody>
         @foreach ($items as $item)
             <tr>
-                <th width="8%"><a href="/admin/product_purchase/{{ $item['id'] }}/del">删除</a></th>
+                <th width="8%"><a href="/product_purchase/{{ $item['id'] }}/del">删除</a></th>
                 <td width="10%">{{ $item['sku'] }}</td>
                 <td width="40%">{{ $item['name'] }}</td>
                 <td width="10%">{{ $item['amount'] }}</td>
@@ -47,7 +47,7 @@
         @endforeach
         </tbody>
     </table>
-    {!! Form::open(['url' => 'admin/purchase/stock/'.$transfer['to_stock_id']]) !!}
+    {!! Form::open(['url' => '/purchase/stock/'.$transfer['to_stock_id']]) !!}
 
         {{Form::label('data','粘贴发票号和收发货日期')}}
 

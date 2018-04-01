@@ -1,6 +1,6 @@
 @extends('app')
 @section('content')
-{!! Form::open(['url' => 'admin/product_purchase/store']) !!}
+{!! Form::open(['url' => 'product_purchase/store']) !!}
 
 {{Form::label('user_id', '选择产品:')}}
 

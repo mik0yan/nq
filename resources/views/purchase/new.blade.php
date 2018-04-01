@@ -7,7 +7,7 @@
         <button type="submit" id='refresh' value="Reset">重置</button>
     {!! Form::close() !!}
 
-    {!! Form::open(['url' => 'admin/product_purchase/store']) !!}
+    {!! Form::open(['url' => 'product_purchase/store']) !!}
 
     <p></p>
     {{Form::label('product_id', '选择产品:')}}

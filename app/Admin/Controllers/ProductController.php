@@ -86,7 +86,9 @@ class ProductController extends Controller
                 $actions->disableDelete();
             });
             $grid->Model()->orderBy('id','desc');
-            $grid->id('ID')->sortable();
+            $grid->id('ID')->display(function ($id){
+                return "<a href='productline?product_id={$id}'>{$id}</a>";
+            })->sortable();
             $grid->name('名称')->editable();
             $grid->sku('物料号')->editable();
             $grid->item('型号')->editable();

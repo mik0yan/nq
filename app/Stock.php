@@ -59,8 +59,10 @@ class Stock extends Model
         foreach ($list2 as $k=>$v) {
             if(array_key_exists($k,$list)){
                 if($list[$k]==$v)
-                    unset($list[$k]);
-                else
+//                    unset($list[$k]);
+                    $list[$k] = $list[$k] - $v;
+
+            else
                     $list[$k] = $list[$k] - $v;
             } else {
                 $list[$k] = -$v;

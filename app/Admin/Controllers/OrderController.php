@@ -99,7 +99,7 @@ class OrderController extends Controller
                     $actions->disableEdit();
                 }
                 elseif($order->status = 9){
-                    $actions->prepend('<a href="/admin/order/check/'.$actions->getKey().'"ˆ><i class="fa fa-check-square-o"></i></a>');
+                    $actions->prepend('<a href="/order/check/'.$actions->getKey().'"ˆ><i class="fa fa-check-square-o"></i></a>');
 
                 }
 
@@ -184,7 +184,7 @@ class OrderController extends Controller
         Reward::unguard();
         $rewards = Reward::insert($data);
         Reward::reguard();
-        return redirect('admin/order');
+        return redirect('order');
 
     }
 

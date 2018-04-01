@@ -120,7 +120,7 @@ class PurchaseController extends Controller
                         $line = [
                             isSet($p->item)?$p->item:"",
                             isSet($p->desc)?$p->desc:"",
-                            '<a href="/admin/serials?product_id='.$p->id.'&purchase_id='.$this->getKey().'">'.$product['amount'].'</a>'
+                            '<a href="/serials?product_id='.$p->id.'&purchase_id='.$this->getKey().'">'.$product['amount'].'</a>'
                             // $product['amount']
                         ];
                         $rows[] = $line;
@@ -249,7 +249,7 @@ class PurchaseController extends Controller
         $transfer->catalog = 1;
         $transfer->save();
 
-        return redirect('/admin/purchase/list/'.$transfer->id);
+        return redirect('/purchase/list/'.$transfer->id);
         // return $data;
     }
 
@@ -324,6 +324,7 @@ class PurchaseController extends Controller
                     $product_stock->product_id = $request['product_id'];
                     $product_stock->transfer_id = $request['transfer_id'];
                     $product_stock->amount = $amount;
+                    $product_stock->remark = json_encode($serials);
                     $product_stock->save();
                 }
                 else {
@@ -331,6 +332,7 @@ class PurchaseController extends Controller
                     $product_stock->product_id = $request['product_id'];
                     $product_stock->transfer_id = $request['transfer_id'];
                     $product_stock->amount = $amount;
+                    $product_stock->remark = json_encode($serials);
                     $product_stock->save();
                 }
             }
@@ -354,7 +356,7 @@ class PurchaseController extends Controller
             }
 
         }
-        return redirect('admin/purchase/list/'.$request['transfer_id']);
+        return redirect('purchase/list/'.$request['transfer_id']);
         // return explode("\r\n",$request['serials']);
     }
 
@@ -364,7 +366,7 @@ class PurchaseController extends Controller
         $tid = $ps-> transfer_id;
         Serials::where('purchase_id', $tid)->where('product_id',$ps->product_id)->delete();
         $ps->delete();
-        return redirect('admin/purchase/list/'.$tid);
+        return redirect('purchase/list/'.$tid);
     }
 
     public function check(Request $rq)

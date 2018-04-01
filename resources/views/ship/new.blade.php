@@ -1,6 +1,6 @@
 @extends('app')
 @section('content')
-{!! Form::open(['url' => 'admin/product_ship/store']) !!}
+{!! Form::open(['url' => '/product_ship/store']) !!}
 
 {{Form::label('product_id', '选择产品:')}}
 {{Form::select('product_id',$product,null, ['placeholder' => '产品型号'])}}

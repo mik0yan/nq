@@ -20,6 +20,7 @@ use Encore\Admin\Controllers\ModelForm;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Jobs\UpdateStorage;
+use Illuminate\Support\Facades\Redis;
 
 class TransferController extends Controller
 {
@@ -159,7 +160,7 @@ class TransferController extends Controller
 //                    ->default($this->from_stock_id)
                     ->rules('required');
             $form->select('to_stock_id','入库仓')->options(Stock::all()->pluck('name','id'))->help('先输入仓库类型:1.海外,2.海关,3.常规,4.返修,5.损耗,6.借机')->rules('required');
-            // $form->select('from_stock_id','出库仓')->options('/admin/api/stocks');
+            // $form->select('from_stock_id','出库仓')->options('/api/stocks');
             $form->select('user_id','操作员')->options(Admin_user::All()->pluck('name','id'))->rules('required');
             $form->text('track_id','运单信息');
             $form->date('arrival_at','到货日期')->rules('required');
@@ -340,7 +341,7 @@ class TransferController extends Controller
 
 
         }
-        return redirect('admin/transfer/list/'.$request['transfer_id']);
+        return redirect('transfer/list/'.$request['transfer_id']);
         // return explode("\r\n",$request['serials']);
     }
 
@@ -352,7 +353,7 @@ class TransferController extends Controller
         {
             $serialnos =  array_filter(array_keys($rq->toArray()),'is_int');
             if($ps = Product_stock::where('product_id',$rq->product_id)->where('transfer_id',$rq->transfer_id)->first()){
-                $ps->amount += count($serialnos);
+                $ps->amount = count($serialnos);
                 $ps->save();
             } else {
                 Product_stock::create([
@@ -360,6 +361,7 @@ class TransferController extends Controller
                     'transfer_id' => $rq->transfer_id,
                     'amount' => count($serialnos),
                     'status' => 3,
+                    'remark' => json_encode($serialnos),
                 ]);
             }
             foreach ($serialnos as $s)
@@ -384,7 +386,7 @@ class TransferController extends Controller
             }
         }
         UpdateStorage::dispatch($transfer->from_stock_id);
-        return redirect('admin/transfer/list/'.$rq['transfer_id']);
+        return redirect('transfer/list/'.$rq['transfer_id']);
 
 
     }
@@ -393,4 +395,64 @@ class TransferController extends Controller
     {
         return (Product::find($rq->id)->core==1)?1:2;
     }
+
+//    物流信息 基本信息+商品列表
+    public function detail($id)
+    {
+        $t = Transfer::find($id);
+        $h = $t->product_stocks();
+        return view('transfer.detail',["transfer"=>$t,"lists"=>$h]);
+    }
+
+//    物流信息 基本信息+商品列表
+    public function productlist(Request $rq, $id)
+    {
+
+    }
+
+//  确认序列号
+    public function checkserial(Request $rq, $id)
+    {
+        $serials = explode("\r\n",$rq['serials']);
+        $result = [];
+        foreach (array_unique($serials) as $key=>$serial)
+        {
+            if(count($serial)>3){
+                $result[] = [
+                    "check"=>Serials::where('serial_no',$serial)->first()?1:0,
+                    "sn"=> $serial,
+                ];
+            }
+
+        }
+
+        return $result;
+    }
+
+    public function checkrange(Request $rq, $id)
+    {
+//        $serials =
+    }
+
+//  查询序列号
+    public function queryserial(Request $rq, $id)
+    {
+        $t = Transfer::find($id);
+        $t->stock2();
+
+    }
+
+//    存储数据
+    public function productstore(Request $rq, $id)
+    {
+
+    }
+
+//    删除产品数据
+    public function productdelete(Request $rq, $id)
+    {
+
+    }
+
+
 }

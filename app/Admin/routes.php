@@ -1,8 +1,11 @@
 <?php
 
 use Illuminate\Routing\Router;
+
 app('debugbar')->disable();
 Admin::registerAuthRoutes();
+
+
 
 Route::group([
     'prefix'        => config('admin.route.prefix'),
@@ -60,6 +63,22 @@ Route::group([
         $router->post('store' ,'TransferController@storeline2');
     });
 
+    $router->group(['prefix'=>'quickline'], function (Router $router) {
+        $router->post('check/{id}' ,'TransferController@checkserial');
+        $router->post('query/{id}' ,'TransferController@queryserial');
+        $router->post('check/{id}' ,'TransferController@queryserial');
+    });
+
+
+//    $router->group(['prefix'=>'quickline'], function(Router $router) {
+//        $router->post('check/{$id}' ,'TransferController@checkserial');
+//        $router->get('/check/{$id}' ,function(){
+//            return 1;
+//        });
+//        $router->post('query/{$id}' ,'TransferController@queryserial');
+//        $router->post('check/{$id}' ,'TransferController@queryserial');
+//    });
+
     $router->group(['prefix'=>'product_purchase'], function (Router $router) {
         $router->any('{transfer_id}/new' ,'PurchaseController@newline');
         $router->get('{transfer_id}/item' ,'PurchaseController@item');
@@ -96,4 +115,8 @@ Route::group([
 
 
     $router->get('test','StockController@test');
+
+
+    $router->get('/{any}', 'SpaController@index')->where('any', '.*');
+
 });

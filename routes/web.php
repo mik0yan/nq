@@ -11,6 +11,9 @@
 |
 */
 
-Route::get('he', function () {
-    return 1;
+Route::get('/{any}', 'SpaController@index')->where('any', '.*');
+
+
+Route::get('test',function (){
+   return "de";
 });

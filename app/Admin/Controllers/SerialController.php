@@ -102,7 +102,7 @@ class SerialController extends Controller
 
                 $filter->in('stock_id', '当前仓库')->select(Stock::all()->pluck('name','id'));
 
-                $filter->in('product_id', '产品')->select(Product::all()->pluck('name','id'));
+                $filter->in('product_id', '产品')->select(Product::all()->pluck('item','id'));
 
                 $filter->in('purchase_id', '采购单')->select(Transfer::where('catalog','1')->pluck('invoiceno','id'));
 
@@ -135,21 +135,21 @@ class SerialController extends Controller
                 if ($product) {
                     return [$product->id => $product->name];
                 }
-            })->ajax('/admin/api/products');
+            })->ajax('/api/products');
             $form->select('purchase_id','采购单')->options(function ($id) {
                 $purchase = Purchase::find($id);
 
                 if ($purchase) {
                     return [$purchase->id => $purchase->name];
                 }
-            })->ajax('/admin/api/purchases');
+            })->ajax('/api/purchases');
             $form->select('ship_id','发货单')->options(function ($id) {
                 $ship  = Transfer::find($id);
 
                 if ($ship) {
                     return [$ship->id => $ship->name];
                 }
-            })->ajax('/admin/api/ships');
+            })->ajax('/api/ships');
 
             $form->text('serial_no','序列号');
             $form->text('comment','备注信息');

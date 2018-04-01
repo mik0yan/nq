@@ -122,7 +122,7 @@ class ShipController extends Controller
                     $line = [
                                 Product::find($product['product_id'])->item,
                                 Product::find($product['product_id'])->desc,
-                                '<a href="/admin/serials?product_id='.$p->id.'&transfer_id='.$this->getKey().'">'.$product['amount'].'</a>'
+                                '<a href="/serials?product_id='.$p->id.'&transfer_id='.$this->getKey().'">'.$product['amount'].'</a>'
                             ];
                             $rows[] = $line;
                         }
@@ -298,7 +298,7 @@ class ShipController extends Controller
 
 
         }
-        return redirect('admin/ship/list/'.$request['transfer_id']);
+        return redirect('/ship/list/'.$request['transfer_id']);
         // return explode("\r\n",$request['serials']);
     }
 }

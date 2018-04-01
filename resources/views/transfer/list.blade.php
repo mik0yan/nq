@@ -21,9 +21,9 @@
         </tr>
     </table>
 
-    <a href="/admin/product_stock/{{$transfer['id']}}/add" class="btn btn-info" role="button">新增</a>
+    <a href="/product_stock/{{$transfer['id']}}/add" class="btn btn-info" role="button">新增</a>
 
-    <a href="/admin/transfer" class="btn btn-danger" role="button">返回</a>
+    <a href="/transfer" class="btn btn-danger" role="button">返回</a>
 
     <table class="table table-striped" width="95%">
         <thead>

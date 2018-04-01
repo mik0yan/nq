@@ -92,13 +92,13 @@ class StockController extends Controller
 
               // prepend an action.
 //                $actions->append('编辑');
-                $actions->append('<a href="/admin/stocks/'.$actions->getKey().'/edit"><i class="fa fa-edit"></i>编辑</a>');
-                $actions->append('<a href="/admin/stock/'.$actions->getKey().'"><i class="fa fa-eye"></i>盘库</a>');
-                $actions->append('<a href="/admin/purchase/create?stock='.$actions->getKey().'"><i class="fa fa-shopping-cart"></i>采购</a>');
-                $actions->append('<a href="/admin/ship/create?stock='.$actions->getKey().'"><i class="fa fa-truck"></i>发货</a>');
-                $actions->append('<a href="/admin/transfer/create?stock='.$actions->getKey().'"><i class="fa fa-arrow-circle-right"></i>调拨</a>');
-                $actions->append('<a href="/admin/rent/create?stock='.$actions->getKey().'"><i class="fa fa-undo"></i>借用</a>');
-                $actions->append('<a href="/admin/recycle/create?stock='.$actions->getKey().'"><i class="fa fa-recycle"></i>核销</a>');
+                $actions->append('<a href="/stocks/'.$actions->getKey().'/edit"><i class="fa fa-edit"></i>编辑</a>');
+                $actions->append('<a href="/stock/'.$actions->getKey().'"><i class="fa fa-eye"></i>盘库</a>');
+                $actions->append('<a href="/purchase/create?stock='.$actions->getKey().'"><i class="fa fa-shopping-cart"></i>采购</a>');
+                $actions->append('<a href="/ship/create?stock='.$actions->getKey().'"><i class="fa fa-truck"></i>发货</a>');
+                $actions->append('<a href="/transfer/create?stock='.$actions->getKey().'"><i class="fa fa-arrow-circle-right"></i>调拨</a>');
+                $actions->append('<a href="/rent/create?stock='.$actions->getKey().'"><i class="fa fa-undo"></i>借用</a>');
+                $actions->append('<a href="/recycle/create?stock='.$actions->getKey().'"><i class="fa fa-recycle"></i>核销</a>');
             });
             $grid->model()->where('user_id',Admin::user()->id);
             $grid->id('ID')->sortable();
@@ -122,7 +122,7 @@ class StockController extends Controller
 
 
             });
-            // $grid->user_id('责任人')->editable('select','/admin/api/users');
+            // $grid->user_id('责任人')->editable('select','/api/users');
         });
     }
 
@@ -155,7 +155,7 @@ class StockController extends Controller
         return User::select(['id', 'name as text'])->get();
     }
 
-
+//    取一个仓库的库存
     public function products($id)
     {
         // $products = $stock->outProducts();
@@ -241,7 +241,7 @@ class StockController extends Controller
                             $serialss .= "&emsp;".(string) $ss[$i]."&emsp;";
                     }
 
-                    $line = [$product->name,$product->sku,$product->desc,'<a href="/admin/serials?stock_id='.$stock_id.'&product_id='.$key.'">'.$sum.'</a>',$serialss];
+                    $line = [$product->name,$product->sku,$product->desc,'<a href="/serials?stock_id='.$stock_id.'&product_id='.$key.'">'.$sum.'</a>'.count($ss),$serialss];
                     $b[] = $line;
 
                     Redis::Zadd("stock:".$stock_id,$key,json_encode($line));
@@ -312,7 +312,7 @@ class StockController extends Controller
                             $serialss .= "&emsp;".(string) $ss[$i]."&emsp;";
                     }
 
-                    $line = [$product->name,$product->sku,$product->desc,'<a href="/admin/serials?stock_id='.$stock_id.'&product_id='.$key.'">'.$sum.'</a>',$serialss];
+                    $line = [$product->name,$product->sku,$product->desc,'<a href="/serials?stock_id='.$stock_id.'&product_id='.$key.'">'.$sum.'</a>',$serialss];
                     $b[] = $line;
                     Redis::Zadd("stock:".$stock_id.":a",$key,json_encode($line));
 
