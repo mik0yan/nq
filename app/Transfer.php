@@ -35,7 +35,7 @@ class Transfer extends Model
 
     public function order()
     {
-        return $this->belongsTo(order::class,'order_id',"id");
+        return $this->belongsTo(Order::class,'order_id',"id");
     }
 
     public function purchase()
@@ -57,6 +57,12 @@ class Transfer extends Model
 
     public function products()
     {
-        return $this->belongsToMany(product::class,'product_stock','transfer_id','product_id','id','id')->withPivot('amount', 'status','remark');
+        return $this->belongsToMany(Product::class,'product_stock','transfer_id','product_id','id','id')->withPivot('amount', 'status','remark');
     }
+
+    public function serials($product_id)
+    {
+        return $this->belongsToMany(Serials::class,'serial_transfer','transfer_id','serial_id','id','id')->where('serials.product_id',$product_id);
+    }
+
 }

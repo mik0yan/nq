@@ -4,7 +4,7 @@ use Illuminate\Database\Seeder;
 use Faker\Factory as Faker;
 use Crockett\CsvSeeder\CsvSeeder;
 
-use App\product;
+use App\Product;
 use App\serials;
 use App\Stock;
 use Carbon\Carbon;

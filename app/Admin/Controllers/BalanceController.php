@@ -2,7 +2,7 @@
 
 namespace App\Admin\Controllers;
 use App\Admin_user;
-use App\order as Order;
+use App\Order;
 use App\Refund;
 use App\Reward;
 use Encore\Admin\Form;

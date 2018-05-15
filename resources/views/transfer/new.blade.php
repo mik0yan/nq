@@ -21,7 +21,7 @@
 
 {!! Form::close() !!}
 
-s<script>
+<script>
     $( "#product_id" ).change(function() {
         var checkValue=$("#product_id").val();
         console.log(checkValue);

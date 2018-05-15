@@ -3,7 +3,7 @@
 use Illuminate\Database\Seeder;
 use Faker\Factory as Faker;
 
-use App\product;
+use App\Product;
 use App\serials;
 use App\Stock;
 use Carbon\Carbon;
@@ -19,7 +19,7 @@ class SerialsTableSeeder extends Seeder
     {
         DB::table('product_packages')->truncate();
         $faker = Faker::create('zh_CN');
-        $products = product::where('core',1)->get();
+        $products = Product::where('core',1)->get();
         foreach ($products as $product) {
             $a = $product->id;
             for ($i=0; $i <100 ; $i++) {

@@ -15,7 +15,8 @@ Route::group([
     'middleware'    => config('admin.route.middleware'),
 ], function (Router $router) {
 
-    $router->get('/', 'StockController@index');
+//    $router->get('/', 'StockController@index');
+    $router->get('/', 'HomeController@index');
     $router->resource('users', UserController::class);
     $router->resource('stocks', StockController::class);
     $router->resource('products',ProductController::class);
@@ -23,11 +24,12 @@ Route::group([
     $router->resource('transfer',TransferController::class);
     $router->resource('purchase',PurchaseController::class);
     $router->resource('order',OrderController::class);
+    $router->resource('order2',OrderSimpleController::class);
     $router->resource('ship',ShipController::class);
     $router->resource('scm/recycle',RecycleController::class);
     $router->resource('scm/lend',LendController::class);
     $router->resource('scm/repair',RepairController::class);
-    $router->resource('vendor',VendorController::class);
+    $router->resource('vendors',VendorController::class);
     $router->resource('serials',SerialController::class);
     $router->resource('reward',RewardsController::class);
     $router->resource('refund',RefundController::class);
@@ -38,14 +40,9 @@ Route::group([
     $router->resource('stock2',StockAdminController::class);
     $router->resource('transfer2',TransferAdminController::class);
     $router->resource('productline',ProductLineController::class);
+    $router->resource('staff',UserController::class);
 
-    $router->get('api/user', 'StockController@user');
 
-    $router->get('api/users',       'TransferController@users');
-    $router->get('api/stocks',      'TransferController@stocks');
-    $router->get('api/purchases',   'TransferController@purchases');
-    $router->get('api/products',    'TransferController@products');
-    $router->get('api/ships',       'TransferController@ships');
 
     $router->get('transfer/list/{id}' ,'TransferController@list');
     $router->get('purchase/list/{id}' ,'PurchaseController@list');
@@ -58,6 +55,44 @@ Route::group([
         $router->get('{transfer_id}/check' ,'TransferController@check');
     });
 
+    $router->group(['prefix'=>'transfer'], function (Router $router) {
+        $router->get('{stock_id}/{any}' ,function($stock){
+            return view('transfer.create',['title'=>$stock]);
+        })->where('any', '.*');
+        $router->post('{stock_id}/purchase' ,'TransferController@postPurchase');
+//        $router->get('{transfer_id}/add' ,'TransferController@newline2');
+//        $router->get('{transfer_id}/item' ,'TransferController@item');
+//        $router->get('{transfer_id}/check' ,'TransferController@check');
+    });
+
+    $router->group(['prefix'=>'api'], function (Router $router) {
+//        仓库详情
+        $router->get('stock/{stock_id}' ,'StockController@api_show');
+        $router->get('stocklist' ,'StockController@list');
+//        商品列表
+        $router->get('productlist','ProductController@list');
+//        产品详情
+        $router->get('product/{id}','ProductController@api_show');
+        $router->get('product/{id}/detail','ProductController@api_stock');
+        $router->get('product/{id}/count','ProductController@api_count');
+//        判断序列号已存在
+        $router->get('serialExist','SerialController@serial_dup');
+
+        $router->get('userlist','UserController@list');
+
+        $router->get('orderlist','OrderController@list');
+        $router->get('contractlist','ContractController@list');
+
+
+
+        $router->get('user', 'StockController@user');
+
+        $router->get('users',       'TransferController@users');
+        $router->get('stocks',      'TransferController@stocks');
+        $router->get('purchases',   'TransferController@purchases');
+        $router->get('products',    'TransferController@products');
+        $router->get('ships',       'TransferController@ships');
+    });
 
     $router->group(['prefix'=>'product_transfer'], function (Router $router) {
         $router->post('store' ,'TransferController@storeline2');
@@ -66,8 +101,11 @@ Route::group([
     $router->group(['prefix'=>'quickline'], function (Router $router) {
         $router->post('check/{id}' ,'TransferController@checkserial');
         $router->post('query/{id}' ,'TransferController@queryserial');
-        $router->post('check/{id}' ,'TransferController@queryserial');
+        $router->get('{id}','TransferController@queryserial');
+        $router->get('/','TransferController@updateSerialTransfer');
+//        $router->post('check/{id}' ,'TransferController@queryserial');
     });
+
 
 
 //    $router->group(['prefix'=>'quickline'], function(Router $router) {
@@ -116,7 +154,11 @@ Route::group([
 
     $router->get('test','StockController@test');
 
+    $router->get('report','SupplyReportController@import');
+    $router->get('report/table', 'SupplyReportController@table');
+
 
     $router->get('/{any}', 'SpaController@index')->where('any', '.*');
+
 
 });

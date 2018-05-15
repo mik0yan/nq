@@ -16,7 +16,12 @@ use Encore\Admin\Facades\Admin;
 use Encore\Admin\Layout\Content;
 use App\Http\Controllers\Controller;
 use Encore\Admin\Controllers\ModelForm;
-
+use Encore\Admin\Widgets\Alert;
+use Encore\Admin\Widgets\Box;
+use Encore\Admin\Widgets\Callout;
+use Encore\Admin\Widgets\Form as Form2;
+use Encore\Admin\Widgets\InfoBox;
+use Encore\Admin\Widgets\Collapse;
 use Encore\Admin\Widgets\Table;
 use Encore\Admin\Widgets\Tab;
 use Illuminate\Support\Collection;
@@ -100,7 +105,7 @@ class StockController extends Controller
                 $actions->append('<a href="/rent/create?stock='.$actions->getKey().'"><i class="fa fa-undo"></i>借用</a>');
                 $actions->append('<a href="/recycle/create?stock='.$actions->getKey().'"><i class="fa fa-recycle"></i>核销</a>');
             });
-            $grid->model()->where('user_id',Admin::user()->id);
+//            $grid->model()->where('user_id',Admin::user()->id);
             $grid->id('ID')->sortable();
             $stock_type = [1=>'海外', 2=>'海关', 3=>'常规', 4=>'返修', 5=>'损耗', 6=>'借机展机'];
             $grid->type('类型')->editable('select',$stock_type);
@@ -158,36 +163,59 @@ class StockController extends Controller
 //    取一个仓库的库存
     public function products($id)
     {
+        return Admin::content(function (Content $content) use($id) {
+
+
+            $content->header(Stock::find($id)->name);
+            $content->description('库存记录');
+
+
+            $content->breadcrumb(
+                ['text' => '首页', 'url' => '/'],
+                ['text' => '供应链', 'url' => '/stocks'],
+                ['text' => Stock::find($id)->name, 'url' => '']
+            );
+            $content->row(function ($row) use($id){
+
+
+                $row->column(6,new box("快速操作","<a href='/purchase/create'>采购</a>&nbsp;&nbsp;"."<a href='/transfer/create'>调拨</a>&nbsp;&nbsp;"."<a href='/ship/create'>出货</a>&nbsp;&nbsp;"."<a href='/return/create'>返修</a>"));
+            });
+            $headers = ['名称','物料号','规格','型号','数量','序列号'];
+            UpdateStorage::dispatch($id);
+
+            $fetchb = Redis::ZRANGE("stock:{$id}:b",0,-1);
+            $b = [];
+            foreach ($fetchb as $item) {
+                $b[] = json_decode($item);
+            }
+
+            $fetcha = Redis::ZRANGE("stock:{$id}:a",0,-1);
+            $a = [];
+            foreach ($fetcha as $item) {
+                $a[] = json_decode($item);
+            }
+
+            $fetchc = Redis::ZRANGE("stock:{$id}:c",0,-1);
+            $c = [];
+            foreach ($fetchc as $item) {
+                $c[] = json_decode($item);
+            }
+
+            $tab = new Tab();
+
+            $tab->add('主机', new Table($headers, $a));
+            $tab->add('配件', new Table($headers, $b));
+            $tab->add('零库存', new Table($headers, $c));
+
+            $content->body($tab);
+        });
+
         // $products = $stock->outProducts();
 
 //        $transfers1 = Transfer::where('from_stock_id',$id)->get();
 //        $transfers2 = Transfer::where('to_stock_id',$id)->get();
         // return $transfers2;
-        $headers = ['名称','物料号','规格','型号','数量','序列号'];
-        UpdateStorage::dispatch($id);
 
-        $fetchb = Redis::ZRANGE("stock:{$id}:b",0,-1);
-        $b = [];
-        foreach ($fetchb as $item) {
-            $b[] = json_decode($item);
-        }
-
-        $fetcha = Redis::ZRANGE("stock:{$id}:a",0,-1);
-        $a = [];
-        foreach ($fetcha as $item) {
-            $a[] = json_decode($item);
-        }
-
-//        return $b;
-
-
-        $tab = new Tab();
-
-        $tab->add('主机', new Table($headers, $a));
-        $tab->add('配件', new Table($headers, $b));
-
-//        return $this->getProductStock($transfers1,$transfers2,$id);
-        return $tab->render();
     }
 
     private function getProductStock($transfers1,$transfers2,$stock_id)
@@ -435,5 +463,21 @@ class StockController extends Controller
 
         return $table->render();
     }
+
+    public function api_show($id)
+    {
+        return Stock::Find($id);
+    }
+
+    public function list()
+    {
+        return Stock::All()->map(function($stock){
+            return [
+                'id' => $stock->id,
+                'name' => $stock->name,
+            ];
+        });
+    }
+
 
 }

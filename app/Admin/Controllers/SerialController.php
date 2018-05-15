@@ -15,10 +15,14 @@ use Encore\Admin\Facades\Admin;
 use Encore\Admin\Layout\Content;
 use App\Http\Controllers\Controller;
 use Encore\Admin\Controllers\ModelForm;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class SerialController extends Controller
 {
     use ModelForm;
+
+
 
     /**
      * Index interface.
@@ -96,9 +100,14 @@ class SerialController extends Controller
             $grid->stock()->name('当前仓库');
             $grid->serial_no('序列号')->editable();
             $grid->comment('备注信息')->editable();
-            $grid->transfer()->comment('发货信息备注')->editable();
+            $grid->dd('发货信息备注')->display(function(){
+                $serial = Serials::find($this->id);
+                $transfer = $serial->transfer;
+                return "<a href='transfer2/$transfer->id/edit'>$transfer->comment</a>";
+            });
+//            comment('发货信息备注');
             $grid->filter(function($filter){
-                $filter->disableIdFilter();
+//                $filter->disableIdFilter();
 
                 $filter->in('stock_id', '当前仓库')->select(Stock::all()->pluck('name','id'));
 
@@ -160,5 +169,35 @@ class SerialController extends Controller
             // $form->display('created_at', 'Created At');
             // $form->display('updated_at', 'Updated At');
         });
+    }
+
+    public function serial_dup(Request $rq)
+    {
+        $data = $rq->all();
+        Log::info("serial duplicate check: ——————".$rq->input('pid').$rq->input('serial'));
+        if(isSet($data['stock_id']))
+        {
+            if($ss = Serials::where('stock_id',$data['stock_id'])->where('serial_no',$data['serial'])->first())
+            {
+                if($ss->product_id == $data['pid'])
+                    return 1;
+                else
+                    return 2;
+//                Serials::where('stock_id',$data['stock_id'])
+//                    ->where('product_id',$data['pid'])
+//                    ->where('serial_no',$data['serial'])
+//                    ->get()->isNotEmpty();
+            }
+            else
+                return 0;
+        }
+        else
+            return (int) Serials::where('product_id',$data['pid'])->where('serial_no',$data['serial'])->get()->isNotEmpty();
+    }
+
+    public function serialInStock(Request $rq)
+    {
+        Log::info("serial  check: ——————".$rq->input('pid').'   '.$rq->input('serial'));
+        return (int) Serials::where('stock_id',$rq->input('pid'))->where('serial_no',$rq->input('serial'))->get()->isNotEmpty();
     }
 }

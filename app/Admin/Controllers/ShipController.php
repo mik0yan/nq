@@ -98,6 +98,8 @@ class ShipController extends Controller
                 $actions->prepend('<a href="transfer/list/'.$actions->getKey().'"><i class="fa fa-list"></i>货品</a>');
             });
             $grid->model()->where('catalog',3)->orderBy('updated_at','desc');
+//            $grid->model()->where('catalog',3)->where('user_id',Admin::user()->id)->orderBy('updated_at','desc');
+
             $grid->id('ID')->sortable();
             $grid->stock2()->name('出库仓');
             $grid->inviceno('发票号')->editable('text');

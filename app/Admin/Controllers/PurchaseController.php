@@ -97,7 +97,8 @@ class PurchaseController extends Controller
                 $actions->prepend('<a href="purchase/list/'.$actions->getKey().'"><i class="fa fa-list"></i>货品</a>');
                 $actions->prepend('<a href="document/purchase/'.$actions->getKey().'" target = "_blank" ><i class="fa fa-file-word-o"></i>下载</a>');
             });
-            $grid->model()->where('catalog',1)->where('user_id',Admin::user()->id)->orderBy('updated_at','desc');
+            $grid->model()->where('catalog',1)->orderBy('updated_at','desc');
+//            $grid->model()->where('catalog',1)->where('user_id',Admin::user()->id)->orderBy('updated_at','desc');
             $grid->id('ID')->sortable();
             $grid->stock()->name('入库仓库');
             $grid->invoiceno('发票号')->editable('text');

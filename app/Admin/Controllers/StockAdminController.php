@@ -237,6 +237,9 @@ class StockAdminController extends Controller
     }
 
 
+
+
+
     public function products($id)
     {
         // $products = $stock->outProducts();

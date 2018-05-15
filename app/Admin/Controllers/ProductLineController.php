@@ -3,7 +3,7 @@
 namespace App\Admin\Controllers;
 
 use App\Admin_user;
-use App\product;
+use App\Product;
 use App\Product_stock;
 use App\Serials;
 use Illuminate\Support\Facades\Request;
@@ -138,7 +138,7 @@ class ProductLineController extends Controller
                 $result = "";
                 if($transfer = Transfer::find($transferId))
                 {
-                    $product = product::find($productId);
+                    $product = Product::find($productId);
                     if($transfer->catalog == 1)
                     {
                         $ss = Serials::where('purchase_id',$transfer->id)->where('product_id',$product->id)->pluck('serial_no');
@@ -167,7 +167,7 @@ class ProductLineController extends Controller
             $grid->filter(function($filter){
 
                 // 去掉默认的id过滤器
-                $filter->equal('product_id','产品')->select(product::pluck('name','id'));
+                $filter->equal('product_id','产品')->select(Product::pluck('name','id'));
                 $filter->equal('user_id','管理员')->select(Admin_user::where('is_sale',0)->pluck('name','id'));
                 // 在这里添加字段过滤器
 

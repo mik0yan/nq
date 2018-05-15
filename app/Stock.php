@@ -115,7 +115,7 @@ class Stock extends Model
         $pss1 = $this->inProducts->where('product_id',$id)->sum('amount');
         $pss2 = $this->outProducts->where('product_id',$id)->sum('amount');
 
-        if(product::find($id)->core==1){
+        if(Product::find($id)->core==1){
             $ss = Serials::where('product_id',$id)->where('stock_id',$this->id)->get()->pluck('serial_no','id');
             return [
                 'amount'=>$pss1-$pss2,
@@ -126,5 +126,73 @@ class Stock extends Model
                 'amount'=>$pss1-$pss2,
             ];
         }
+    }
+
+//    不同种类的仓库可执行的操作
+    public function stockMethods()
+    {
+        if($this->type == 3)  //常规库
+        {
+            return [
+                [
+                    'type'=>1,
+                    'transfer' => "采购",
+                    'title'=>'purchase'
+                ],
+                [
+                    'type'=>2,
+                    'transfer' => "调拨",
+                    'title'=>'trans'
+                ],
+                [
+                    'type'=>3,
+                    'transfer' => "出货",
+                    'title'=>'ship'
+                ],
+            ];
+        }
+        elseif($this->type == 6)
+        {
+            return [
+                [
+                    'type' => 2,
+                    'transfer' => "调拨",
+                    'title'=>'trans'
+                ],
+                [
+                    'type' => 3,
+                    'transfer' => "出货",
+                    'title'=>'ship'
+                ],
+                [
+                    'type' => 4,
+                    'transfer' => "借出",
+                    'title'=>'lend'
+                ],
+                [
+                    'type' => 5,
+                    'transfer' => "归还",
+                    'title'=>'return'
+                ]
+            ];
+        }
+        elseif($this->type == 2)
+        {
+            return [
+                [
+                    'type'=>1,
+                    'transfer' => "采购",
+                    'title'=>'purchase'
+                ],
+                [
+                    'type' => 2,
+                    'transfer' => "调拨",
+                    'title'=>'trans'
+                ],
+
+            ];
+        }
+        else
+            return [];
     }
 }

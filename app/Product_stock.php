@@ -20,8 +20,14 @@ class Product_stock extends Model
         return $this->belongsTo(Transfer::class);
     }
 
+    public function serials()
+    {
+        return $this->belongsToMany(Serials::class,'serial_transfer','transfer_id','serial_id','id','transfer_id');
+    }
+
     public function fromStock($id)
     {
+
 
     }
 }

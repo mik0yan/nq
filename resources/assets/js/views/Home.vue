@@ -1,3 +1,3 @@
 <template>
-    <p>This is the homepage</p>
+    <p>主页</p>
 </template>

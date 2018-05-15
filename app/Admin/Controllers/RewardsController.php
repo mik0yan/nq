@@ -6,7 +6,7 @@ use App\Reward;
 
 use App\Admin_user;
 use App\Order;
-use App\client;
+use App\Client;
 use Carbon\Carbon;
 use Encore\Admin\Form;
 use Encore\Admin\Grid;
@@ -86,7 +86,7 @@ class RewardsController extends Controller
             });
             $grid->order_id('医院')->display(function ($order_id) {
                 $order = Order::find($order_id);
-                $client = client::find($order->client_id);
+                $client = Client::find($order->client_id);
                 return $client->corp;
             });
             $grid->sum('金额');

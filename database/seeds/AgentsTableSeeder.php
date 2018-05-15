@@ -2,9 +2,9 @@
 use Illuminate\Database\Seeder;
 use Faker\Factory as Faker;
 
-use App\client;
+use App\Client;
 use App\hospital;
-use App\agent;
+use App\Agent;
 use App\area;
 
 class AgentsTableSeeder extends Seeder
@@ -33,7 +33,7 @@ class AgentsTableSeeder extends Seeder
       for($i=1;$i<=150;$i++)
       {
         $seed = $faker->unique()->Numberbetween(1,2966);
-        agent::create([
+        Agent::create([
           'name' => $faker->name() ,
           'corp'=>$faker->company(),
           'level'=>$faker->Numberbetween(1,2),

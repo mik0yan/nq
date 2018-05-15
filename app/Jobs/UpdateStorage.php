@@ -4,7 +4,7 @@ namespace App\Jobs;
 
 use App\Stock;
 use App\Serials;
-use App\product as Product;
+use App\Product;
 use Illuminate\Bus\Queueable;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Queue\InteractsWithQueue;
@@ -40,6 +40,7 @@ class UpdateStorage implements ShouldQueue
     {
         Redis::del('stock:'.$this->stock_id.':a');
         Redis::del('stock:'.$this->stock_id.':b');
+        Redis::del('stock:'.$this->stock_id.':c');
         Redis::del('stock:'.$this->stock_id);
 
         $ss = Stock::find($this->stock_id)->amountProducts();
@@ -67,22 +68,33 @@ class UpdateStorage implements ShouldQueue
                         $p->item,
                         $p->desc,
                         $p->sku,
-                        "<a href='../serials?stock_id={$this->stock_id}&product_id={$k}'>{$l}</a>--".count($sv),
+                        $l>3||$l==0?
+                            "<a href='../serials?stock_id={$this->stock_id}&product_id={$k}'>{$l}</a>"
+                                :"<a href='../serials?stock_id={$this->stock_id}&product_id={$k}'>{$l}  <i class=\"fa fa-battery-quarter\"></i></a>",
                         $serialss,
                     ];
                     Redis::Zadd('stock:'.$this->stock_id,$k,json_encode($a));
-                    Redis::Zadd('stock:'.$this->stock_id.":a",$k,json_encode($a));
+                    if($l==0)
+                        Redis::Zadd('stock:'.$this->stock_id.":c",$k,json_encode($a));
+                    else
+                        Redis::Zadd('stock:'.$this->stock_id.":a",$k,json_encode($a));
+
                 } else {
+
                     $b = [
                         "<a href='../productline?stock={$this->stock_id}&product_id={$k}'>{$p->name}</a>",
                         $p->item,
                         $p->desc,
                         $p->sku,
-                        $l,
+                        $l>3||$l==0?$l:$l."  <i class=\"fa fa-battery-quarter\"></i>",
                         ""
                     ];
                     Redis::Zadd('stock:'.$this->stock_id,$k,json_encode($b));
-                    Redis::Zadd('stock:'.$this->stock_id.":b",$k,json_encode($b));
+                    if($l==0)
+                        Redis::Zadd('stock:'.$this->stock_id.":c",$k,json_encode($b));
+                    else
+                        Redis::Zadd('stock:'.$this->stock_id.":b",$k,json_encode($b));
+
                 }
             }
 

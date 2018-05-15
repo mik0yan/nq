@@ -2,13 +2,13 @@
 use Illuminate\Database\Seeder;
 use Faker\Factory as Faker;
 
-use App\client;
+use App\Client;
 use App\hospital;
-use App\agent;
-use App\order;
+use App\Agent;
+use App\Order;
 use App\order_product;
 use App\order_approve;
-use App\product;
+use App\Product;
 use App\payment;
 use App\charge;
 
@@ -33,13 +33,13 @@ class OrderTableSeeder extends Seeder
       {
         $product_id =rand(1,96);
         $amount = rand(1,5);
-        $price = product::getprice($product_id) * (1+ $faker->randomElement([-0.2,0.1,0.05,-0.05,-0.1]));
+        $price = Product::getprice($product_id) * (1+ $faker->randomElement([-0.2,0.1,0.05,-0.05,-0.1]));
         order_product::create([
           'product_id' => $product_id,
           'order_id' => $id,
           'amount' => $amount,
           'sub_total' => $amount* $price,
-          'bonus' => $amount * product::getbonus($product_id)
+          'bonus' => $amount * Product::getbonus($product_id)
         ]);
         $total += $amount * $price;
       }

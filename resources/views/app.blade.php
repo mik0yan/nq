@@ -9,6 +9,7 @@
         <link rel='stylesheet' href="/css/bootstrap.min.css" type='text/css' media='all'/>
         <link rel='stylesheet' href="/css/all.css" type='text/css' media='all'/>
         <script src="/js/jquery-3.3.1.min.js"></script>
+        <script src="{{ mix('js/app.js') }}"></script>
         <title>@yield('title')</title>
     </head>
     <body>
@@ -17,11 +18,7 @@
 
                 <section class="content">
 
-                    <div class="pad group">
-
                         @yield('content')
-
-                    </div>
 
                 </section>
 

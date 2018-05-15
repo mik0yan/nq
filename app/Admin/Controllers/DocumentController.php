@@ -5,7 +5,7 @@ namespace App\Admin\Controllers;
 use App\Transfer;
 use App\Serials;
 use App\Stock;
-use App\product as Product;
+use App\Product;
 use App\Http\Controllers\Controller;
 use Carbon\Carbon;
 use Encore\Admin\Controllers\ModelForm;

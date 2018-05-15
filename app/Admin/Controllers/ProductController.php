@@ -2,9 +2,11 @@
 
 namespace App\Admin\Controllers;
 
-use App\product;
+use App\Product;
 
+use App\Stock;
 use App\Vendor;
+use App\Serials;
 use Encore\Admin\Form;
 use Encore\Admin\Grid;
 use Encore\Admin\Widgets\Table;
@@ -16,6 +18,7 @@ use Encore\Admin\Facades\Admin;
 use Encore\Admin\Layout\Content;
 use App\Http\Controllers\Controller;
 use Encore\Admin\Controllers\ModelForm;
+use Symfony\Component\HttpFoundation\Request;
 
 class ProductController extends Controller
 {
@@ -81,7 +84,7 @@ class ProductController extends Controller
      */
     protected function grid()
     {
-        return Admin::grid(product::class, function (Grid $grid) {
+        return Admin::grid(Product::class, function (Grid $grid) {
             $grid->actions(function ($actions) {
                 $actions->disableDelete();
             });
@@ -132,7 +135,7 @@ class ProductController extends Controller
      */
     protected function form()
     {
-        return Admin::form(product::class, function (Form $form) {
+        return Admin::form(Product::class, function (Form $form) {
 
             $form->display('id', 'ID');
 //            $catalog = ['静态心电图机','运动心电图仪','运动心肺','康复系统类','运动踏车类','康讯类','动态血压','运动血压','小肺','运动平板类','急救系列','核磁监护仪','动态心电','软件类','监护仪','国产类','运动肺'];
@@ -172,5 +175,64 @@ class ProductController extends Controller
             });
 
         });
+    }
+
+
+    public function  list()
+    {
+        return Product::all()->map(function($product){
+            return [
+                'id' => $product->id,
+                'core'=> $product->core,
+                'name'=> $product->name.$product->desc,
+            ];
+        });
+    }
+
+    public function api_show($id)
+    {
+        return Product::find($id);
+    }
+
+//    查找该产品在库存量
+    public function api_count(Request $rq, $id)
+    {
+        $data = $rq->all();
+        if(isSet($data['stock_id']))
+        {
+            $list = Stock::find($data['stock_id'])->amountProducts();
+            if(isSet($list[$id]))
+                return $list[$id];
+            else
+                return 0;
+        }
+        else
+            return 0;
+    }
+
+    public function api_stock(Request $rq, $id)
+    {
+        $data = $rq->all();
+        if(isSet($data['stock_id']))
+        {
+            $p = Product::find($id);
+            $list = Stock::find($data['stock_id'])->amountProducts();
+            if(isSet($list[$id]))
+            {
+                $ss = Serials::where('stock_id',$data['stock_id'])->where('product_id',$id)->pluck('serial_no');
+                $p['max'] = $list[$id];
+                $p['stocklist'] = $ss->combine(array_fill(0,count($ss),false));
+                return $p;
+            }
+
+            else
+            {
+                $p['max'] = 0;
+                return $p;
+            }
+
+        }
+        else
+            return null;
     }
 }

@@ -7,8 +7,16 @@ use App\Users;
 use App\Client;
 use App\Reward;
 use App\Admin_user;
-use App\agent;
+use App\Agent;
 use App\Admin\Extensions\CheckRow;
+use Encore\Admin\Widgets\Alert;
+use Encore\Admin\Widgets\Box;
+use Encore\Admin\Widgets\Callout;
+use Encore\Admin\Widgets\Form as Form2;
+use Encore\Admin\Widgets\InfoBox;
+use Encore\Admin\Widgets\Collapse;
+use Encore\Admin\Widgets\Table;
+
 use Encore\Admin\Form;
 use Encore\Admin\Grid;
 use Encore\Admin\Facades\Admin;
@@ -130,10 +138,10 @@ class OrderController extends Controller
                 Admin_user::All()->pluck('name', 'id')
             );
             $form->select('client_id','医院')->options(
-                client::All()->pluck('corp', 'id')
+                Client::All()->pluck('corp', 'id')
             );
             $form->select('agent_id','代理商')->options(
-                agent::All()->pluck('corp', 'id')
+                Agent::All()->pluck('corp', 'id')
             );
             $form->currency('sum','总价')->symbol('￥');
             $form->currency('price','货值')->symbol('￥');
@@ -186,6 +194,17 @@ class OrderController extends Controller
         Reward::reguard();
         return redirect('order');
 
+    }
+
+    public function list()
+    {
+        return Order::orderBy('updated_at','desc')->get()->map(function($order){
+            return [
+                'id' => $order->id,
+                'name'=>"销售【". $order->user->name.'】跟进【'. $order->client->corp."】订单".$order->comment,
+                'disabled'=> $order->status < 7
+            ];
+        });
     }
 
 

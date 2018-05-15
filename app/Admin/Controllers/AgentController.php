@@ -2,7 +2,7 @@
 
 namespace App\Admin\Controllers;
 
-use App\agent;
+use App\Agent;
 use App\area;
 use Encore\Admin\Form;
 use Encore\Admin\Grid;
@@ -71,7 +71,7 @@ class AgentController extends Controller
      */
     protected function grid()
     {
-        return Admin::grid(agent::class, function (Grid $grid) {
+        return Admin::grid(Agent::class, function (Grid $grid) {
 
             $grid->id('ID')->sortable();
             $grid->corp('公司名称');
@@ -99,7 +99,7 @@ class AgentController extends Controller
      */
     protected function form()
     {
-        return Admin::form(agent::class, function (Form $form) {
+        return Admin::form(Agent::class, function (Form $form) {
 
             $form->display('id', 'ID');
             $form->text('corp','公司');

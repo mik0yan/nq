@@ -20,6 +20,7 @@ use Encore\Admin\Controllers\ModelForm;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Jobs\UpdateStorage;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redis;
 
 class TransferController extends Controller
@@ -91,6 +92,7 @@ class TransferController extends Controller
               // prepend an action.
 //              $actions->prepend('<a href="transfer/list/'.$actions->getKey().'"><i class="fa fa-paper-plane"></i></a>');
             });
+//            $grid->model()->where('catalog',2)->where('user_id',Admin::user()->id)->orderBy('updated_at','desc');
             $grid->model()->where('catalog',2)->orderBy('updated_at','desc');
             $grid->id('ID')->sortable();
 
@@ -112,10 +114,12 @@ class TransferController extends Controller
             $grid->product_stocks('商品清单')->display(function ($products){
                         $rows = [];
                         foreach($products as $product){
+                            $p = Product::find($product['product_id']);
                             $line = [
                                 Product::find($product['product_id'])->item,
                                 Product::find($product['product_id'])->desc,
-                                $product['amount']
+                                '<a href="/serials?product_id='.$p->id.'&transfer_id='.$this->getKey().'">'.$product['amount'].'</a>'
+
                             ];
                             $rows[] = $line;
                         }
@@ -270,10 +274,8 @@ class TransferController extends Controller
     {
         $transfer = Transfer::find($transfer_id);
         $stock = Stock::find($transfer->from_stock_id);
-//        return array_keys($stock->amountProducts());
         $products = Product::whereIn('id',array_keys($stock->amountProducts()))->get();
-//        return $products;
-        // $product = Product::pluck('name','id');
+
         $groupeds = $products->groupBy('catalog');
         $keys = [];
         $pss =[];
@@ -437,8 +439,53 @@ class TransferController extends Controller
 //  查询序列号
     public function queryserial(Request $rq, $id)
     {
+        $titles = [null,"采购","调拨","出货","借出","归还","返修","修理","合格","损耗"];
         $t = Transfer::find($id);
-        $t->stock2();
+//        T1:采购,T2:移库,T3:发货,T4:借出,T5:返还,T6.损耗,T7:改配
+        return [
+            "title" =>$titles[$t->catalog],
+            "from"=>$t->from_stock_id ? [
+                'id'=>$t->stock2->id,
+                'name'=>$t->stock2->name,
+                'address'=>$t->stock2->address,
+                'user'=>$t->stock2->user->name,
+            ]:null,
+            "to"=>$t->to_stock_id ? [
+                'id'=>$t->stock->id,
+                'name'=>$t->stock->name,
+                'address'=>$t->stock->address,
+                'user'=>$t->stock->user->name,
+            ]:null,
+            "order"=>$t->order_id ?[
+                'id'=>$t->order->id,
+                'user'=>$t->order->user->name,
+                'client' =>$t->order->client->corp,
+                'agent' =>$t->order->agent->corp,
+                'orderno' =>$t->order->ordno,
+            ]:null,
+            "user"=>$t->user->name,
+            "track"=>['invoice'=>$t->invoiceno,'contract'=>$t->contractno,'track'=>$t->track_id,],
+            "comment"=>$t->comment,
+            "date" => ['ship'=>$t->ship_at,'arrival'=>$t->arrival_at,],
+            "detail" =>$t-> product_stocks->transform(function ($product){
+                return [
+                    'id' => $product->id,
+                    'amount' =>  $product->amount,
+                    'product_id' => $product->product->id,
+                    'product_name' => $product->product->name.$product->product->desc,
+                    'core' => ($product->product->core ==1),
+                    'serials' => $product->transfer->serials($product->product_id)->get()->map(function($serial){
+                        return [
+                            'id'=>$serial->id,
+                            'serial'=>$serial->serial_no,
+                            'comment'=>$serial->comment,
+                        ];
+                    }),
+                ];
+            }),
+        ];
+
+//        return $t->stock2()->get();
 
     }
 
@@ -453,6 +500,67 @@ class TransferController extends Controller
     {
 
     }
+
+    public function updateSerialTransfer()
+    {
+        $ss = Serials::all();
+        foreach ($ss as $s) {
+            if($s->purchase_id && Transfer::find($s->purchase_id))
+                $s->transfers()->attach($s->purchase_id);
+            if($s->transfer_id && Transfer::find($s->transfer_id) && $s->transfer_id!=$s->purchase_id)
+                $s->transfers()->attach($s->transfer_id);
+        }
+    }
+
+    public function postPurchase(Request $rq)
+    {
+        $data =  $rq->json()->all();
+        if(isSet($data['to_stock_id']))
+        {
+            $t = new Transfer;
+            $t->catalog = 1;
+            $t->invoiceno = $data['invoiceno'];
+            $t->contractno = $data['contractno'];
+            $t->comment = $data['comment'];
+            $t->track_id = $data['track_id'];
+            $t->to_stock_id = $data['to_stock_id'];
+            $t->ship_at = $data['ship_at'];
+            $t->arrival_at = $data['arrival_at'];
+            $t->save();
+            foreach ($data['list'] as $item) {
+                Log::info("make item  ". json_encode($item));
+                $ps = new Product_stock;
+                $ps->product_id = $item['id'];
+                $ps->transfer_id = $t->id;
+                $ps->amount = $item['num'];
+                $ps->remark = $item['comment'];
+                $ps->status = 3;
+                $ps->save();
+                if($item['core'])
+                {
+                    foreach ($item['seriallist'] as $serial)
+                    {
+                        $ss = new Serials;
+                        $ss->product_id = $item['id'];
+                        $ss->purchase_id = $t->id;
+                        $ss->stock_id = $data['to_stock_id'];
+                        $ss->serial_no = $serial;
+                        $ss->transfer_id = $t->id;
+                        $ss->product_at = $data['ship_at'];
+                        $ss->storage_at = $data['arrival_at'];
+                        $ss->save();
+                    }
+                }
+            }
+        }
+
+        return [
+            "code" => 200,
+            "message" => "success",
+            "data"=>$data
+        ];
+    }
+
 
 
 }

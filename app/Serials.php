@@ -36,6 +36,11 @@ class Serials extends Model
         return $this->belongsTo(Transfer::class,'transfer_id','id');
     }
 
+    public function transfers()
+    {
+        return $this->belongsToMany(Transfer::class,'serial_transfer','serial_id','transfer_id','id','id');
+    }
+
     public function serialsForHuman($ss)
     {
         $last_id = null;
