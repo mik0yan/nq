@@ -1,6 +1,43 @@
 <template>
     <div>
-        <h1>出货单</h1>
+        <h1>归还单</h1>
+
+        <el-table
+                :data="lends"
+                style="width: 100%"
+                max-height="250">
+            <el-table-column
+                fixed
+                prop="id"
+                label="序号">
+            </el-table-column>
+            <el-table-column
+                    fixed
+                    prop="user"
+                    label="出库员">
+            </el-table-column>
+            <el-table-column
+                    fixed
+                    prop="hospital"
+                    label="医院">
+            </el-table-column>
+            <el-table-column
+                    fixed
+                    prop="agent"
+                    label="代理商">
+            </el-table-column>
+            <el-table-column
+                    fixed
+                    prop="comment"
+                    label="备注">
+            </el-table-column>
+            <el-table-column
+                    fixed
+                    prop="ship_at"
+                    label="发货期">
+            </el-table-column>
+        </el-table>
+
 
         <el-form label-position ='right' label-width="120px">
             <el-form-item  label="出库仓" >
@@ -165,6 +202,7 @@
             this.getUsers();
             this.getStocks();
             this.getOrders();
+            this.getLends();
         },
         data() {
             return {
@@ -197,6 +235,7 @@
                 list:[],
                 users:[],
                 stocks:[],
+                lends:[],
                 orders:[],
             };
         },
@@ -219,6 +258,13 @@
             getOrders(){
                 axios.get('/api/orderlist').then((response)=>{
                     this.orders = response.data;
+                    console.log(this.order);
+                });
+            },
+
+            getLends(){
+                axios.get('/api/lendlist/' + this.$route.params.stock_id).then((response)=>{
+                    this.lends = response.data;
                     console.log(this.order);
                 });
             },
@@ -335,11 +381,13 @@
 
             postData()
             {
-                console.log(this.transfer)
-//                axios.post('/transfer/' + this.$route.params.stock_id + '/trans', this.transfer).then((response)=>{
-//                    console.log("print response ")
-//                    console.log(this.transfer)
-//                });
+                console.log(this.transfer);
+                axios.post('/transfer/' + this.$route.params.stock_id + '/trans', this.transfer).then((response)=>{
+                    console.log("print response ")
+                    console.log(this.transfer)
+                });
+                window.location.href = '/transfer2?catalog=4';
+
             }
 
 //            remoteMethod(query) {

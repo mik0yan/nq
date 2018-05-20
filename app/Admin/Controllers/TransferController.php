@@ -512,6 +512,7 @@ class TransferController extends Controller
         }
     }
 
+    //提交采购信息
     public function postPurchase(Request $rq)
     {
         $data =  $rq->json()->all();
@@ -524,6 +525,7 @@ class TransferController extends Controller
             $t->comment = $data['comment'];
             $t->track_id = $data['track_id'];
             $t->to_stock_id = $data['to_stock_id'];
+            $t->user_id = $data['user_id'];
             $t->ship_at = $data['ship_at'];
             $t->arrival_at = $data['arrival_at'];
             $t->save();
@@ -533,7 +535,6 @@ class TransferController extends Controller
                 $ps->product_id = $item['id'];
                 $ps->transfer_id = $t->id;
                 $ps->amount = $item['num'];
-                $ps->remark = $item['comment'];
                 $ps->status = 3;
                 $ps->save();
                 if($item['core'])
@@ -561,6 +562,162 @@ class TransferController extends Controller
         ];
     }
 
+    //提交调拨信息
+    public function postTrans(Request $rq)
+    {
+        $data =  $rq->json()->all();
+        if(isSet($data['to_stock_id']) && isSet($data['from_stock_id']))
+        {
+            $t = new Transfer;
+            $t->catalog = 2;
+            $t->invoiceno = $data['invoiceno'];
+            $t->contractno = $data['contractno'];
+            $t->comment = $data['comment'];
+            $t->track_id = $data['track_id'];
+            $t->to_stock_id = $data['to_stock_id'];
+            $t->from_stock_id = $data['from_stock_id'];
+            $t->ship_at = $data['ship_at'];
+            $t->user_id = $data['user_id'];
+            $t->arrival_at = $data['arrival_at'];
+            $t->save();
+            foreach ($data['list'] as $item) {
+                Log::info("make item  ". json_encode($item));
+                $ps = new Product_stock;
+                $ps->product_id = $item['id'];
+                $ps->transfer_id = $t->id;
+                $ps->amount = $item['num'];
+                $ps->status = 3;
+                $ps->save();
+                if($item['core'])
+                {
+                    foreach ($item['seriallist'] as $serial)
+                    {
+                        $ss =  Serials::where('serial_no',$serial)->where('product_id',$item['id'])->first();
+                        $ss->stock_id = $data['to_stock_id'];
+                        $ss->transfer_id = $t->id;
+                        $ss->save();
+                        $ss->transfers()->attach($t->id);
+                    }
+                }
+            }
+        }
+
+        return [
+            "code" => 200,
+            "message" => "success",
+            "data"=>$data
+        ];
+    }
+
+    public function postShip(Request $rq)
+    {
+        $data =  $rq->json()->all();
+        if( isSet($data['from_stock_id']))
+        {
+            $t = new Transfer;
+            $t->catalog = 3;
+            $t->invoiceno = $data['invoiceno'];
+            $t->contractno = $data['contractno'];
+            $t->comment = $data['comment'];
+            $t->track_id = $data['track_id'];
+            $t->order_id = $data['order_id'];
+            $t->from_stock_id = $data['from_stock_id'];
+            $t->ship_at = $data['ship_at'];
+            $t->user_id = $data['user_id'];
+            $t->arrival_at = $data['arrival_at'];
+            $t->save();
+            foreach ($data['list'] as $item) {
+                Log::info("make item  ". json_encode($item));
+                $ps = new Product_stock;
+                $ps->product_id = $item['id'];
+                $ps->transfer_id = $t->id;
+                $ps->amount = $item['num'];
+                $ps->status = 3;
+                $ps->save();
+                if($item['core'])
+                {
+                    foreach ($item['seriallist'] as $serial)
+                    {
+                        $ss =  Serials::where('serial_no',$serial)->where('product_id',$item['id'])->first();
+                        $ss->stock_id = null;
+                        $ss->transfer_id = $t->id;
+                        $ss->ship_id = $t->id;
+                        $ss->save();
+                        $ss->transfers()->attach($t->id);
+                    }
+                }
+            }
+        }
+
+        return [
+            "code" => 200,
+            "message" => "success",
+            "data"=>$data
+        ];
+    }
+
+    public function postLend(Request $rq)
+    {
+        $data =  $rq->json()->all();
+        if( isSet($data['from_stock_id']))
+        {
+            $t = new Transfer;
+            $t->catalog = 4;
+            $t->contractno = $data['contractno'];
+            $t->comment = $data['comment'];
+            $t->track_id = $data['track_id'];
+            $t->from_stock_id = $data['from_stock_id'];
+            $t->ship_at = $data['ship_at'];
+            $t->user_id = $data['user_id'];
+            $t->arrival_at = $data['arrival_at'];
+            $t->save();
+            foreach ($data['list'] as $item) {
+                Log::info("make item  ". json_encode($item));
+                $ps = new Product_stock;
+                $ps->product_id = $item['id'];
+                $ps->transfer_id = $t->id;
+                $ps->amount = $item['num'];
+                $ps->status = 3;
+                $ps->save();
+                if($item['core'])
+                {
+                    foreach ($item['seriallist'] as $serial)
+                    {
+                        if($ss =  Serials::where('serial_no',$serial)->where('product_id',$item['id'])->first())
+                        {
+                            $ss->transfer_id = $t->id;
+//                        $ss->ship_id = $t->id;
+                            $ss->save();
+                            $ss->transfers()->attach($t->id);
+                        }
+
+                    }
+                }
+            }
+        }
+
+        return [
+            "code" => 200,
+            "message" => "success",
+            "data"=>$data
+        ];
+    }
+
+
+//    借出清单
+    public function lendlist($id)
+    {
+        return Transfer::where('catalog',4)->orderBy('updated_at','desc')->get()->map(function ($trans){
+            return [
+                'id' => $trans->id,
+                'user' => $trans->user->name,
+                'hospital' => $trans->contract->Client->corp ?? "",
+                'agent' => $trans->contract->Agent->corp ?? "",
+                'comment' => $trans->comment,
+                'ship_at' => $trans->ship_at,
+            ];
+        });
+    }
 
 
 }

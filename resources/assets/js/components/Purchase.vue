@@ -212,33 +212,39 @@
             //提交序列号 判断是否重复扫描 是否已存在
             submit:function(data)
             {
-                if(data.seriallist.indexOf(data.serials)!=-1)
-                {
-                    alert('重复扫描')
-                    data.serials = ''
-                }
+                if(data.serials.trim().length == 0  )
+                    alert('输入为空')
                 else
                 {
-                    axios.get('/api/serialExist',{
-                        params: {
-                            pid: data.id,
-                            serial: data.serials
-                        }
-                    }).then((response)=>{
-                        if(response.data ==1)
-                        {
-                            alert('序列号已存在')
-                            data.serials = ""
-                        }
-                        else
-                        {
-                            data.seriallist.push(data.serials)
-                            data.serials = ""
-                            data.num = data.seriallist.length
-                        }
-                    })
+                    if(data.seriallist.indexOf(data.serials)!=-1)
+                    {
+                        alert('重复扫描')
+                        data.serials = ''
+                    }
+                    else
+                    {
+                        axios.get('/api/serialExist',{
+                            params: {
+                                pid: data.id,
+                                serial: data.serials
+                            }
+                        }).then((response)=>{
+                            if(response.data ==1)
+                            {
+                                alert('序列号已存在')
+                                data.serials = ""
+                            }
+                            else
+                            {
+                                data.seriallist.push(data.serials)
+                                data.serials = ""
+                                data.num = data.seriallist.length
+                            }
+                        })
 
+                    }
                 }
+
             },
 
             handleClose:function (tag,data) {
@@ -276,10 +282,13 @@
 
             postData()
             {
+                console.log(this.transfer)
                 axios.post('/transfer/' + this.$route.params.stock_id + '/purchase', this.transfer).then((response)=>{
                     console.log("print response ")
                     console.log(response.data)
                 });
+                window.location.href = '/transfer2?catalog=1';
+
             }
 
 //            remoteMethod(query) {

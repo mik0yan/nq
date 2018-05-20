@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Contract extends Model
 {
     //
+    protected $fillable = ['name','comment','client_id','agent_id','user_id'];
 
     public function Transfer()
     {

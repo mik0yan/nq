@@ -60,6 +60,9 @@ Route::group([
             return view('transfer.create',['title'=>$stock]);
         })->where('any', '.*');
         $router->post('{stock_id}/purchase' ,'TransferController@postPurchase');
+        $router->post('{stock_id}/trans' ,'TransferController@postTrans');
+        $router->post('{stock_id}/ship' ,'TransferController@postShip');
+        $router->post('{stock_id}/lend' ,'TransferController@postLend');
 //        $router->get('{transfer_id}/add' ,'TransferController@newline2');
 //        $router->get('{transfer_id}/item' ,'TransferController@item');
 //        $router->get('{transfer_id}/check' ,'TransferController@check');
@@ -71,6 +74,7 @@ Route::group([
         $router->get('stocklist' ,'StockController@list');
 //        商品列表
         $router->get('productlist','ProductController@list');
+        $router->get('productlist/{stock_id}','ProductController@stocklist');
 //        产品详情
         $router->get('product/{id}','ProductController@api_show');
         $router->get('product/{id}/detail','ProductController@api_stock');
@@ -83,6 +87,13 @@ Route::group([
         $router->get('orderlist','OrderController@list');
         $router->get('contractlist','ContractController@list');
 
+        $router->post('contract','ContractController@store');
+
+
+        $router->get('clientlist','ClientController@list');
+        $router->get('agentlist','AgentController@list');
+
+        $router->get('lendlist/{stock_id}','TransferController@lendlist');
 
 
         $router->get('user', 'StockController@user');

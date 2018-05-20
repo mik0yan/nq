@@ -111,4 +111,16 @@ class ClientController extends Controller
             $form->display('updated_at', 'Updated At');
         });
     }
+
+
+    public function list()
+    {
+        return Client::orderBy('updated_at','desc')->get()->map(function($client){
+            return [
+                'id' => $client->id,
+                'name'=>"【{$client->corp}】医院:联系人【{$client->name}】",
+//                'disabled'=> $order->status < 7
+            ];
+        });
+    }
 }

@@ -23,18 +23,25 @@
                 </el-select>
             </el-form-item>
             <el-form-item  label="协议信息">
-                <el-select
-                        v-model="outstock.contactno"
-                        filterable
-                        style="width: 500px">
-                    <el-option
-                            v-for="item in contracts"
-                            :key="item.id"
-                            :label="item.name"
-                            :value="item.id"
-                            :disabled="item.disabled">
-                    </el-option>
-                </el-select>
+                <!--<el-col>-->
+                    <el-select
+                            v-model="transfer.contractno"
+                            filterable
+                            style="width: 500px">
+                        <el-option
+                                v-for="item in contracts"
+                                :key="item.id"
+                                :label="item.name"
+                                :value="item.id"
+                                :disabled="item.disabled">
+                        </el-option>
+                    </el-select>
+                    <el-button type="success" @click="contractFormVisible = true" icon="el-icon-plus" circle></el-button>
+
+                <!--</el-col>-->
+
+                <!--<el-col>-->
+                <!--</el-col>-->
             </el-form-item>
             <el-form-item  label="发货日期">
                 <el-col :span="10">
@@ -62,13 +69,6 @@
             </el-form-item>
             <el-form-item  label="物流单号">
                 <el-input v-model="transfer.track_id"></el-input>
-            </el-form-item>
-            <el-form-item  label="协议号">
-                <el-input v-model="transfer.contractno"></el-input>
-            </el-form-item>
-
-            <el-form-item  label="发票号">
-                <el-input v-model="transfer.invoiceno"></el-input>
             </el-form-item>
             <el-form-item  label="备注">
                 <el-input v-model="transfer.comment"></el-input>
@@ -98,43 +98,34 @@
                         </el-select>
                     </el-col>
                     <el-col :span="8" >
-                        <el-tag v-model="product.max">库存量:{{product.max}}个</el-tag>
                         <el-input-number v-model="product.num"  :min="0" :max="product.max" label="描述文字"></el-input-number>
                     </el-col>
-                    <el-col :span="6" v-if="product.core" >
-                        <el-checkbox-group v-model="seriallist">
-                            <el-checkbox
-                                    v-for="(serial,key) in item.stocklist"
-                                    :key="key"
-                                    :label="key" border>
-                                {{serial}}
-                            </el-checkbox>
-                        </el-checkbox-group>
-
+                    <el-col :span="6" v-if="product.core">
+                        <el-input
+                                v-model="product.serials"
+                                label="产品编号"
+                                clearable
+                                @keyup.enter.native="submit(product)"
+                                placeholder="请输入序列号">
+                        </el-input>
                     </el-col>
                 </el-row>
                 <el-row>
-                    <el-col :span="12" :offset="6">
-                        <el-tag
-                                v-for="tag in product.seriallist"
-                                :key="tag"
-                                closable
-                                type="success"
-                                @close="handleClose(tag,product)">
-                                {{tag}}
-                        </el-tag>
+                    <el-col>
+                        <div style="margin-top: 20px">
+                            <el-checkbox-group v-model="product.seriallist" size="mini">
+                                <el-checkbox-button
+                                        v-for="serial in product.stocklist"
+                                        :label="serial"
+                                        :key="serial"
+                                        @change ="updateAmount(product)"
+                                >{{serial}}
+                                </el-checkbox-button>
+                            </el-checkbox-group>
+                        </div>
                     </el-col>
                 </el-row>
-                <!--<el-row >-->
-                    <!--<el-col v-if="product.core">-->
-                        <!--<el-input-->
-                                <!--v-model="product.comment"-->
-                                <!--label="产品备注"-->
-                                <!--clearable-->
-                                <!--placeholder="产品备注">-->
-                        <!--</el-input>-->
-                    <!--</el-col>-->
-                <!--</el-row>-->
+
             </el-form-item>
             <el-form-item>
                 <el-button type="success" @click="addProduct" icon="el-icon-plus" circle></el-button>
@@ -144,6 +135,61 @@
                 <el-button type="text" @click="$router.back(-1)">取消</el-button>
             </el-form-item>
         </el-form>
+
+
+        <el-dialog title="新建协议" :visible.sync="contractFormVisible" >
+            <el-form :model="contract">
+                <el-form-item label="协议名称" >
+                    <el-input v-model="contract.name" auto-complete="off"></el-input>
+                </el-form-item>
+                <el-form-item label="协议备注" >
+                    <el-input v-model="contract.comment" auto-complete="off"></el-input>
+                </el-form-item>
+                <el-form-item  label="医院">
+                    <el-select
+                            v-model="contract.client_id"
+                            filterable
+                            style="width: 300px">
+                        <el-option
+                                v-for="item in clients"
+                                :key="item.id"
+                                :label="item.name"
+                                :value="item.id">
+                        </el-option>
+                    </el-select>
+                </el-form-item>
+                <el-form-item  label="代理商">
+                    <el-select
+                            v-model="contract.agent_id"
+                            filterable
+                            style="width: 300px">
+                        <el-option
+                                v-for="item in agents"
+                                :key="item.id"
+                                :label="item.name"
+                                :value="item.id">
+                        </el-option>
+                    </el-select>
+                </el-form-item>
+                <el-form-item  label="销售">
+                    <el-select
+                            v-model="contract.user_id"
+                            filterable
+                            style="width: 300px">
+                        <el-option
+                                v-for="item in users"
+                                :key="item.id"
+                                :label="item.name"
+                                :value="item.id">
+                        </el-option>
+                    </el-select>
+                </el-form-item>
+            </el-form>
+            <div slot="footer" class="dialog-footer">
+                <el-button @click="contractFormVisible = false">取 消</el-button>
+                <el-button type="primary" @click="contractFormVisible = false; submitContract()">确 定</el-button>
+            </div>
+        </el-dialog>
     </div>
 </template>
 
@@ -168,10 +214,20 @@
             this.getUsers();
             this.getStocks();
             this.getContracts();
-            this.getOrders();
+            this.getClients();
+            this.getAgents();
         },
         data() {
             return {
+                contract: {
+                    name: '',
+                    comment: '',
+                    user_id: '',
+                    agent_id: '',
+                    client_id: ''
+                },
+                formLabelWidth: '120px',
+                contractFormVisible: false,
                 input: this.$route.params.stock_id,
                 outstock: {
                     name: '',
@@ -185,6 +241,7 @@
                     from_stock_id: '',
                     invoiceno:'',
                     contractno: '',
+                    order_id: '',
                     comment: '',
                     ship_at: this.$moment(new Date()).format('YYYY-MM-DD HH:mm:ss'),
                     arrival_at: this.$moment(new Date()).format('YYYY-MM-DD HH:mm:ss'),
@@ -193,18 +250,19 @@
                         name: '',
                         id:'',
                         num: 1,
-                        max:0,
                         core: false,
                         serials: '',
-                        seriallist: [],
-                        stocklist:[]
+                        stocklist:[],
+                        seriallist: []
                     }]
                 },
                 list:[],
+                contracts: [],
+                orders:[],
+                clients: [],
+                agents: [],
                 users:[],
                 stocks:[],
-                orders:[],
-                contracts:[],
             };
         },
         computed:{
@@ -223,12 +281,6 @@
                 });
             },
 
-            getOrders(){
-                axios.get('/api/orderlist').then((response)=>{
-                    this.orders = response.data;
-                    console.log(this.order);
-                });
-            },
 
             getContracts(){
                 axios.get('/api/contractlist').then((response)=>{
@@ -236,6 +288,21 @@
                     console.log(this.contracts);
                 });
             },
+
+            getClients(){
+                axios.get('/api/clientlist').then((response)=>{
+                    this.clients = response.data;
+                    console.log(this.clients);
+                });
+            },
+
+            getAgents(){
+                axios.get('/api/agentlist').then((response)=>{
+                    this.agents = response.data;
+                    console.log(this.agents);
+                });
+            },
+
 
             send(){
                 axios.get('/api/stock/'+ this.$route.params.stock_id).then((response) => {
@@ -246,19 +313,36 @@
                     console.log(this.transfer);
                 });
             },
+
             products()
             {
-                axios.get('/api/productlist').then((response)=>{
+                axios.get('/api/productlist/'+this.$route.params.stock_id).then((response)=>{
                     this.list = response.data;
                     console.log(response.data);
                 });
             },
+
             addProduct()
             {
                 this.transfer.list.push({
                     name: '',
                     id:''
                 });
+            },
+
+            submitContract() {
+                console.log(this.contract),
+                axios.post('/api/contract', this.contract).then((response)=>{
+                        console.log("print response ");
+                        console.log(this.contract)
+                });
+                this.getContracts();
+                this.contractFormVisible = false;
+            },
+
+            updateAmount:function(data)
+            {
+                data.num = data.seriallist.length
             },
 
             //提交序列号 判断是否重复扫描 是否已存在
@@ -269,28 +353,16 @@
                     alert('重复扫描')
                     data.serials = ''
                 }
+                else if(data.stocklist.indexOf(data.serials)!=-1)
+                {
+                    data.seriallist.push(data.serials)
+                    data.serials = ""
+                    data.num = data.seriallist.length
+                }
                 else
                 {
-                    axios.get('/api/serialExist',c).then((response)=>{
-                        if(response.data ==1)
-                        {
-                            data.seriallist.push(data.serials)
-                            data.serials = ""
-                            data.num = data.seriallist.length
-
-                        }
-                        else if(response.data ==2)
-                        {
-                            alert('序列号弄错产品型号')
-                            data.serials = ""
-                        }
-                        else
-                        {
-                            alert('序列号不存在')
-                            data.serials = ""
-                        }
-                    })
-
+                    alert('请输入有效序列号')
+                    data.serials = ""
                 }
             },
 
@@ -317,41 +389,28 @@
 
             refreshProduct(item)
             {
-//                axios.get('/api/product/' + item.id ).then((response)=>{
-//                    if(response.data.core == 1)
-//                    {
-//                        item.core = 1;
-//                        item.num = 0;
-//                    }
-//                    else
-//                    {
-//                        item.core = 0;
-//                    }
-////                    item.core = response.data.core === 1;
-//
-//                    console.log("print response ")
-//
-//                    console.log(response)
-//                });
-
-                axios.get('/api/product/'+ item.id + '/detail',{
+                axios.get('/api/product/' + item.id , {
                     params: {
                         stock_id: this.$route.params.stock_id
                     }
                 }).then((response)=>{
-                    console.log(response.data)
-                    item.max = response.data.max
-//                    console.log(item.max)
                     if(response.data.core == 1)
                     {
                         item.core = 1;
+                        item.stocklist = response.data.stocklist;
                         item.num = 0;
                     }
                     else
                     {
                         item.core = 0;
+                        item.num = 1;
+                        item.stocklist = []
+
                     }
-                    item.stocklist = response.data.stocklist
+
+                    console.log("print response ")
+
+                    console.log(response)
                 });
                 item.serials ='';
                 item.seriallist = [];
@@ -360,11 +419,14 @@
             postData()
             {
                 console.log(this.transfer)
-//                axios.post('/transfer/' + this.$route.params.stock_id + '/trans', this.transfer).then((response)=>{
-//                    console.log("print response ")
-//                    console.log(this.transfer)
-//                });
+                axios.post('/transfer/' + this.$route.params.stock_id + '/lend', this.transfer).then((response)=>{
+                    console.log("print response ")
+                    console.log(this.transfer)
+                });
+                window.location.href = '/transfer2?catalog=4';
+
             }
+
 
 //            remoteMethod(query) {
 //                if (query !== '') {

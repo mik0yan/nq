@@ -11,6 +11,6 @@
 |
 */
 
-Route::get('{any}', 'SpaController@index')->where('any', '.*');
-
-Route::get('report','ReportController@import');
+//Route::get('{any}', 'SpaController@index')->where('any', '.*');
+//
+//Route::get('report','ReportController@import');

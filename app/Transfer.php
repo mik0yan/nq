@@ -65,4 +65,9 @@ class Transfer extends Model
         return $this->belongsToMany(Serials::class,'serial_transfer','transfer_id','serial_id','id','id')->where('serials.product_id',$product_id);
     }
 
+    public function contract()
+    {
+        return $this->belongsTo(Contract::class,'contractno','id');
+    }
+
 }

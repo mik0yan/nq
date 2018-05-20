@@ -10,6 +10,7 @@ use Encore\Admin\Facades\Admin;
 use Encore\Admin\Layout\Content;
 use App\Http\Controllers\Controller;
 use Encore\Admin\Controllers\ModelForm;
+use Illuminate\Http\Request;
 
 class ContractController extends Controller
 {
@@ -106,5 +107,12 @@ class ContractController extends Controller
 //                'disabled'=> $order->status < 7
             ];
         });
+    }
+
+    public function store(Request $rq)
+    {
+        $data = $rq->json()->all();
+        Contract::create($data);
+        return $data;
     }
 }

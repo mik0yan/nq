@@ -1,14 +1,14 @@
 import Vue from 'vue';
 import VueRouter from 'vue-router';
 // import TransInfo from '..components/TransInfo'
-import Purchase from '../components/Purchase.vue';
-import Ship from '../components/Ship.vue';
-import Trans from '../components/Trans.vue';
-import Lend from '../components/Lend.vue';
-import Return from '../components/Return.vue';
-import Loss from '../components/Loss.vue';
-import Rework from '../components/Rework.vue';
-import Repair from '../components/Repair.vue';
+import Purchase from '../components/Purchase.vue'; //采购
+import Ship from '../components/Ship.vue';  //发货
+import Trans from '../components/Trans.vue'; //调拨
+import Lend from '../components/Lend.vue';  //借出
+import Return from '../components/Return.vue';  //归还
+import Loss from '../components/Loss.vue'; //损耗
+import Rework from '../components/Rework.vue'; //返修
+import Repair from '../components/Repair.vue'; //维修
 
 Vue.use(VueRouter);
 

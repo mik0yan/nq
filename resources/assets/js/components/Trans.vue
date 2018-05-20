@@ -22,7 +22,7 @@
                     </el-option>
                 </el-select>
             </el-form-item>
-            <el-form-item>
+            <el-form-item   label="入库仓">
                 <el-select
                         v-model="instock.id"
                         filterable
@@ -37,9 +37,9 @@
                     </el-option>
                 </el-select>
             </el-form-item>
-            <el-form-item  label="入库仓" >
-                <el-input v-model="instock.name" :disabled="true"></el-input>
-            </el-form-item>
+            <!--<el-form-item >-->
+                <!--<el-input v-model="instock.name" :disabled="true"></el-input>-->
+            <!--</el-form-item>-->
             <el-form-item  label="入库地址">
                 <el-input v-model="instock.address" :disabled="true"></el-input>
             </el-form-item>
@@ -128,27 +128,30 @@
                     </el-col>
                 </el-row>
                 <el-row>
-                    <el-col :span="12" :offset="6">
-                        <el-tag
-                                v-for="tag in product.seriallist"
-                                :key="tag"
-                                closable
-                                type="success"
-                                @close="handleClose(tag,product)">
-                                {{tag}}
-                        </el-tag>
+                    <!--<el-col :span="12" :offset="6">-->
+                        <!--<el-tag-->
+                                <!--v-for="tag in product.seriallist"-->
+                                <!--:key="tag"-->
+                                <!--closable-->
+                                <!--type="success"-->
+                                <!--@close="handleClose(tag,product)">-->
+                                <!--{{tag}}-->
+                        <!--</el-tag>-->
+                    <!--</el-col>-->
+                    <el-col>
+                        <div style="margin-top: 20px">
+                            <el-checkbox-group v-model="product.seriallist" size="mini">
+                                <el-checkbox-button
+                                        v-for="serial in product.stocklist"
+                                        :label="serial"
+                                        :key="serial"
+                                        @change ="updateAmount(product)"
+                                >{{serial}}
+                                </el-checkbox-button>
+                            </el-checkbox-group>
+                        </div>
                     </el-col>
                 </el-row>
-                <!--<el-row >-->
-                    <!--<el-col v-if="product.core">-->
-                        <!--<el-input-->
-                                <!--v-model="product.comment"-->
-                                <!--label="产品备注"-->
-                                <!--clearable-->
-                                <!--placeholder="产品备注">-->
-                        <!--</el-input>-->
-                    <!--</el-col>-->
-                <!--</el-row>-->
             </el-form-item>
             <el-form-item>
                 <el-button type="success" @click="addProduct" icon="el-icon-plus" circle></el-button>
@@ -207,6 +210,7 @@
                         num: 1,
                         core: false,
                         serials: '',
+                        stocklist:[],
                         seriallist: []
                     }]
                 },
@@ -242,7 +246,7 @@
             },
             products()
             {
-                axios.get('/api/productlist').then((response)=>{
+                axios.get('/api/productlist/'+this.$route.params.stock_id).then((response)=>{
                     this.list = response.data;
                     console.log(response.data);
                 });
@@ -251,8 +255,17 @@
             {
                 this.transfer.list.push({
                     name: '',
-                    id:''
+                    id:'',
+                    num: 1,
+                    core: false,
+                    serials: '',
+                    seriallist: []
                 });
+            },
+
+            updateAmount:function(data)
+            {
+                data.num = data.seriallist.length
             },
 
             //提交序列号 判断是否重复扫描 是否已存在
@@ -263,34 +276,38 @@
                     alert('重复扫描')
                     data.serials = ''
                 }
+                else if(data.stocklist.indexOf(data.serials)!=-1)
+                {
+                    data.seriallist.push(data.serials)
+                    data.serials = ""
+                    data.num = data.seriallist.length
+//                    axios.get('/api/serialExist',{
+//                        params: {
+//                            stock_id: this.transfer.from_stock_id,
+//                            pid: data.id,
+//                            serial: data.serials
+//                        }
+//                    }).then((response)=>{
+//                        if(response.data ==1)
+//                        {
+//                            data.seriallist.push(data.serials)
+//                            data.serials = ""
+//                            data.num = data.seriallist.length
+//
+//                        }
+//                        else if(response.data ==2)
+//                        {
+//                            alert('序列号弄错产品型号')
+//                            data.serials = ""
+//                        }
+
+//                    })
+
+                }
                 else
                 {
-                    axios.get('/api/serialExist',{
-                        params: {
-                            stock_id: this.transfer.from_stock_id,
-                            pid: data.id,
-                            serial: data.serials
-                        }
-                    }).then((response)=>{
-                        if(response.data ==1)
-                        {
-                            data.seriallist.push(data.serials)
-                            data.serials = ""
-                            data.num = data.seriallist.length
-
-                        }
-                        else if(response.data ==2)
-                        {
-                            alert('序列号弄错产品型号')
-                            data.serials = ""
-                        }
-                        else
-                        {
-                            alert('序列号不存在')
-                            data.serials = ""
-                        }
-                    })
-
+                    alert('请输入有效序列号')
+                    data.serials = ""
                 }
             },
 
@@ -317,16 +334,24 @@
 
             refreshProduct(item)
             {
-                axios.get('/api/product/' + item.id ).then((response)=>{
+                axios.get('/api/product/' + item.id , {
+                        params: {
+                            stock_id: this.$route.params.stock_id
+                        }
+                    }).then((response)=>{
                     if(response.data.core == 1)
                     {
                         item.core = 1;
+                        item.stocklist = response.data.stocklist;
+                        item.num = 0;
                     }
                     else
                     {
                         item.core = 0;
+                        item.num = 1;
+                        item.stocklist = []
+
                     }
-//                    item.core = response.data.core === 1;
 
                     console.log("print response ")
 
@@ -339,10 +364,12 @@
             postData()
             {
                 console.log(this.transfer)
-//                axios.post('/transfer/' + this.$route.params.stock_id + '/trans', this.transfer).then((response)=>{
-//                    console.log("print response ")
-//                    console.log(this.transfer)
-//                });
+                axios.post('/transfer/' + this.$route.params.stock_id + '/trans', this.transfer).then((response)=>{
+                    console.log("print response ")
+                    console.log(this.transfer)
+                });
+                window.location.href = '/transfer2?catalog=2';
+
             }
 
 //            remoteMethod(query) {

@@ -35438,25 +35438,27 @@ function required(rule, value, source, errors, options, type) {
 
         //提交序列号 判断是否重复扫描 是否已存在
         submit: function submit(data) {
-            if (data.seriallist.indexOf(data.serials) != -1) {
-                alert('重复扫描');
-                data.serials = '';
-            } else {
-                __WEBPACK_IMPORTED_MODULE_1_axios___default.a.get('/api/serialExist', {
-                    params: {
-                        pid: data.id,
-                        serial: data.serials
-                    }
-                }).then(function (response) {
-                    if (response.data == 1) {
-                        alert('序列号已存在');
-                        data.serials = "";
-                    } else {
-                        data.seriallist.push(data.serials);
-                        data.serials = "";
-                        data.num = data.seriallist.length;
-                    }
-                });
+            if (data.serials.trim().length == 0) alert('输入为空');else {
+                if (data.seriallist.indexOf(data.serials) != -1) {
+                    alert('重复扫描');
+                    data.serials = '';
+                } else {
+                    __WEBPACK_IMPORTED_MODULE_1_axios___default.a.get('/api/serialExist', {
+                        params: {
+                            pid: data.id,
+                            serial: data.serials
+                        }
+                    }).then(function (response) {
+                        if (response.data == 1) {
+                            alert('序列号已存在');
+                            data.serials = "";
+                        } else {
+                            data.seriallist.push(data.serials);
+                            data.serials = "";
+                            data.num = data.seriallist.length;
+                        }
+                    });
+                }
             }
         },
 
@@ -35487,10 +35489,12 @@ function required(rule, value, source, errors, options, type) {
             item.seriallist = [];
         },
         postData: function postData() {
+            console.log(this.transfer);
             __WEBPACK_IMPORTED_MODULE_1_axios___default.a.post('/transfer/' + this.$route.params.stock_id + '/purchase', this.transfer).then(function (response) {
                 console.log("print response ");
                 console.log(response.data);
             });
+            window.location.href = '/transfer2?catalog=1';
         }
 
         //            remoteMethod(query) {
@@ -35662,9 +35666,6 @@ function required(rule, value, source, errors, options, type) {
 //
 //
 //
-//
-//
-//
 
 
 //    import VueRouter from 'vue-router'
@@ -35673,19 +35674,13 @@ function required(rule, value, source, errors, options, type) {
 
 /* harmony default export */ __webpack_exports__["a"] = ({
     porps: ['stock_id'],
-    mount: function mount() {
-        //            axios.get('/api/stock/'+this.$route.params.stock_id).then((response) => {
-        //                console.log(response.data);
-        //                this.stock = response.data;
-        //            });
-        //            this.send()
-    },
+    mount: function mount() {},
     mounted: function mounted() {
         this.send();
         this.products();
+        this.getOrders();
         this.getUsers();
         this.getStocks();
-        this.getOrders();
     },
     data: function data() {
         return {
@@ -35702,6 +35697,7 @@ function required(rule, value, source, errors, options, type) {
                 from_stock_id: '',
                 invoiceno: '',
                 contractno: '',
+                order_id: '',
                 comment: '',
                 ship_at: this.$moment(new Date()).format('YYYY-MM-DD HH:mm:ss'),
                 arrival_at: this.$moment(new Date()).format('YYYY-MM-DD HH:mm:ss'),
@@ -35712,13 +35708,14 @@ function required(rule, value, source, errors, options, type) {
                     num: 1,
                     core: false,
                     serials: '',
+                    stocklist: [],
                     seriallist: []
                 }]
             },
             list: [],
+            orders: [],
             users: [],
-            stocks: [],
-            orders: []
+            stocks: []
         };
     },
 
@@ -35760,7 +35757,7 @@ function required(rule, value, source, errors, options, type) {
         products: function products() {
             var _this5 = this;
 
-            __WEBPACK_IMPORTED_MODULE_1_axios___default.a.get('/api/productlist').then(function (response) {
+            __WEBPACK_IMPORTED_MODULE_1_axios___default.a.get('/api/productlist/' + this.$route.params.stock_id).then(function (response) {
                 _this5.list = response.data;
                 console.log(response.data);
             });
@@ -35768,30 +35765,31 @@ function required(rule, value, source, errors, options, type) {
         addProduct: function addProduct() {
             this.transfer.list.push({
                 name: '',
-                id: ''
+                id: '',
+                num: 1,
+                core: false,
+                serials: '',
+                seriallist: []
             });
         },
 
+
+        updateAmount: function updateAmount(data) {
+            data.num = data.seriallist.length;
+        },
 
         //提交序列号 判断是否重复扫描 是否已存在
         submit: function submit(data) {
             if (data.seriallist.indexOf(data.serials) != -1) {
                 alert('重复扫描');
                 data.serials = '';
+            } else if (data.stocklist.indexOf(data.serials) != -1) {
+                data.seriallist.push(data.serials);
+                data.serials = "";
+                data.num = data.seriallist.length;
             } else {
-                __WEBPACK_IMPORTED_MODULE_1_axios___default.a.get('/api/serialExist', c).then(function (response) {
-                    if (response.data == 1) {
-                        data.seriallist.push(data.serials);
-                        data.serials = "";
-                        data.num = data.seriallist.length;
-                    } else if (response.data == 2) {
-                        alert('序列号弄错产品型号');
-                        data.serials = "";
-                    } else {
-                        alert('序列号不存在');
-                        data.serials = "";
-                    }
-                });
+                alert('请输入有效序列号');
+                data.serials = "";
             }
         },
 
@@ -35815,54 +35813,38 @@ function required(rule, value, source, errors, options, type) {
             });
         },
         refreshProduct: function refreshProduct(item) {
-            __WEBPACK_IMPORTED_MODULE_1_axios___default.a.get('/api/product/' + item.id).then(function (response) {
+            __WEBPACK_IMPORTED_MODULE_1_axios___default.a.get('/api/product/' + item.id, {
+                params: {
+                    stock_id: this.$route.params.stock_id
+                }
+            }).then(function (response) {
                 if (response.data.core == 1) {
                     item.core = 1;
+                    item.stocklist = response.data.stocklist;
                     item.num = 0;
                 } else {
                     item.core = 0;
+                    item.num = 1;
+                    item.stocklist = [];
                 }
-                //                    item.core = response.data.core === 1;
 
                 console.log("print response ");
 
                 console.log(response);
             });
-
-            __WEBPACK_IMPORTED_MODULE_1_axios___default.a.get('/api/product/' + item.id + '/count', {
-                params: {
-                    stock_id: this.transfer.from_stock_id
-                }
-            }).then(function (response) {
-                console.log(response.data);
-                item.max = response.data;
-                //                    console.log(item.max)
-            });
             item.serials = '';
             item.seriallist = [];
         },
         postData: function postData() {
+            var _this7 = this;
+
             console.log(this.transfer);
-            //                axios.post('/transfer/' + this.$route.params.stock_id + '/trans', this.transfer).then((response)=>{
-            //                    console.log("print response ")
-            //                    console.log(this.transfer)
-            //                });
+            __WEBPACK_IMPORTED_MODULE_1_axios___default.a.post('/transfer/' + this.$route.params.stock_id + '/ship', this.transfer).then(function (response) {
+                console.log("print response ");
+                console.log(_this7.transfer);
+            });
+            //                window.location.href = '/transfer2?catalog=3';
         }
-
-        //            remoteMethod(query) {
-        //                if (query !== '') {
-        //                    this.loading = true;
-        //                    setTimeout(() => {
-        //                        this.loading = false;
-        //                        this.options4 = this.name.filter(item => {
-        //                            return item.name.indexOf(query) > -1;
-        //                        });
-        //                    }, 200);
-        //                } else {
-        //                    this.options4 = [];
-        //                }
-        //            }
-
     }
 });
 
@@ -36038,6 +36020,9 @@ function required(rule, value, source, errors, options, type) {
 //
 //
 //
+//
+//
+//
 
 
 //    import VueRouter from 'vue-router'
@@ -36084,6 +36069,7 @@ function required(rule, value, source, errors, options, type) {
                     num: 1,
                     core: false,
                     serials: '',
+                    stocklist: [],
                     seriallist: []
                 }]
             },
@@ -36123,7 +36109,7 @@ function required(rule, value, source, errors, options, type) {
         products: function products() {
             var _this4 = this;
 
-            __WEBPACK_IMPORTED_MODULE_1_axios___default.a.get('/api/productlist').then(function (response) {
+            __WEBPACK_IMPORTED_MODULE_1_axios___default.a.get('/api/productlist/' + this.$route.params.stock_id).then(function (response) {
                 _this4.list = response.data;
                 console.log(response.data);
             });
@@ -36131,36 +36117,52 @@ function required(rule, value, source, errors, options, type) {
         addProduct: function addProduct() {
             this.transfer.list.push({
                 name: '',
-                id: ''
+                id: '',
+                num: 1,
+                core: false,
+                serials: '',
+                seriallist: []
             });
         },
 
+
+        updateAmount: function updateAmount(data) {
+            data.num = data.seriallist.length;
+        },
 
         //提交序列号 判断是否重复扫描 是否已存在
         submit: function submit(data) {
             if (data.seriallist.indexOf(data.serials) != -1) {
                 alert('重复扫描');
                 data.serials = '';
+            } else if (data.stocklist.indexOf(data.serials) != -1) {
+                data.seriallist.push(data.serials);
+                data.serials = "";
+                data.num = data.seriallist.length;
+                //                    axios.get('/api/serialExist',{
+                //                        params: {
+                //                            stock_id: this.transfer.from_stock_id,
+                //                            pid: data.id,
+                //                            serial: data.serials
+                //                        }
+                //                    }).then((response)=>{
+                //                        if(response.data ==1)
+                //                        {
+                //                            data.seriallist.push(data.serials)
+                //                            data.serials = ""
+                //                            data.num = data.seriallist.length
+                //
+                //                        }
+                //                        else if(response.data ==2)
+                //                        {
+                //                            alert('序列号弄错产品型号')
+                //                            data.serials = ""
+                //                        }
+
+                //                    })
             } else {
-                __WEBPACK_IMPORTED_MODULE_1_axios___default.a.get('/api/serialExist', {
-                    params: {
-                        stock_id: this.transfer.from_stock_id,
-                        pid: data.id,
-                        serial: data.serials
-                    }
-                }).then(function (response) {
-                    if (response.data == 1) {
-                        data.seriallist.push(data.serials);
-                        data.serials = "";
-                        data.num = data.seriallist.length;
-                    } else if (response.data == 2) {
-                        alert('序列号弄错产品型号');
-                        data.serials = "";
-                    } else {
-                        alert('序列号不存在');
-                        data.serials = "";
-                    }
-                });
+                alert('请输入有效序列号');
+                data.serials = "";
             }
         },
 
@@ -36184,13 +36186,20 @@ function required(rule, value, source, errors, options, type) {
             });
         },
         refreshProduct: function refreshProduct(item) {
-            __WEBPACK_IMPORTED_MODULE_1_axios___default.a.get('/api/product/' + item.id).then(function (response) {
+            __WEBPACK_IMPORTED_MODULE_1_axios___default.a.get('/api/product/' + item.id, {
+                params: {
+                    stock_id: this.$route.params.stock_id
+                }
+            }).then(function (response) {
                 if (response.data.core == 1) {
                     item.core = 1;
+                    item.stocklist = response.data.stocklist;
+                    item.num = 0;
                 } else {
                     item.core = 0;
+                    item.num = 1;
+                    item.stocklist = [];
                 }
-                //                    item.core = response.data.core === 1;
 
                 console.log("print response ");
 
@@ -36200,11 +36209,14 @@ function required(rule, value, source, errors, options, type) {
             item.seriallist = [];
         },
         postData: function postData() {
+            var _this6 = this;
+
             console.log(this.transfer);
-            //                axios.post('/transfer/' + this.$route.params.stock_id + '/trans', this.transfer).then((response)=>{
-            //                    console.log("print response ")
-            //                    console.log(this.transfer)
-            //                });
+            __WEBPACK_IMPORTED_MODULE_1_axios___default.a.post('/transfer/' + this.$route.params.stock_id + '/trans', this.transfer).then(function (response) {
+                console.log("print response ");
+                console.log(_this6.transfer);
+            });
+            window.location.href = '/transfer2?catalog=2';
         }
 
         //            remoteMethod(query) {
@@ -36382,6 +36394,52 @@ function required(rule, value, source, errors, options, type) {
 //
 //
 //
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
 
 
 //    import VueRouter from 'vue-router'
@@ -36403,10 +36461,20 @@ function required(rule, value, source, errors, options, type) {
         this.getUsers();
         this.getStocks();
         this.getContracts();
-        this.getOrders();
+        this.getClients();
+        this.getAgents();
     },
     data: function data() {
         return {
+            contract: {
+                name: '',
+                comment: '',
+                user_id: '',
+                agent_id: '',
+                client_id: ''
+            },
+            formLabelWidth: '120px',
+            contractFormVisible: false,
             input: this.$route.params.stock_id,
             outstock: {
                 name: ''
@@ -36420,6 +36488,7 @@ function required(rule, value, source, errors, options, type) {
                 from_stock_id: '',
                 invoiceno: '',
                 contractno: '',
+                order_id: '',
                 comment: '',
                 ship_at: this.$moment(new Date()).format('YYYY-MM-DD HH:mm:ss'),
                 arrival_at: this.$moment(new Date()).format('YYYY-MM-DD HH:mm:ss'),
@@ -36428,18 +36497,19 @@ function required(rule, value, source, errors, options, type) {
                     name: '',
                     id: '',
                     num: 1,
-                    max: 0,
                     core: false,
                     serials: '',
-                    seriallist: [],
-                    stocklist: []
+                    stocklist: [],
+                    seriallist: []
                 }]
             },
             list: [],
-            users: [],
-            stocks: [],
+            contracts: [],
             orders: [],
-            contracts: []
+            clients: [],
+            agents: [],
+            users: [],
+            stocks: []
         };
     },
 
@@ -36459,38 +36529,46 @@ function required(rule, value, source, errors, options, type) {
                 _this2.stocks = response.data;
             });
         },
-        getOrders: function getOrders() {
+        getContracts: function getContracts() {
             var _this3 = this;
 
-            __WEBPACK_IMPORTED_MODULE_1_axios___default.a.get('/api/orderlist').then(function (response) {
-                _this3.orders = response.data;
-                console.log(_this3.order);
+            __WEBPACK_IMPORTED_MODULE_1_axios___default.a.get('/api/contractlist').then(function (response) {
+                _this3.contracts = response.data;
+                console.log(_this3.contracts);
             });
         },
-        getContracts: function getContracts() {
+        getClients: function getClients() {
             var _this4 = this;
 
-            __WEBPACK_IMPORTED_MODULE_1_axios___default.a.get('/api/contractlist').then(function (response) {
-                _this4.contracts = response.data;
-                console.log(_this4.contracts);
+            __WEBPACK_IMPORTED_MODULE_1_axios___default.a.get('/api/clientlist').then(function (response) {
+                _this4.clients = response.data;
+                console.log(_this4.clients);
+            });
+        },
+        getAgents: function getAgents() {
+            var _this5 = this;
+
+            __WEBPACK_IMPORTED_MODULE_1_axios___default.a.get('/api/agentlist').then(function (response) {
+                _this5.agents = response.data;
+                console.log(_this5.agents);
             });
         },
         send: function send() {
-            var _this5 = this;
+            var _this6 = this;
 
             __WEBPACK_IMPORTED_MODULE_1_axios___default.a.get('/api/stock/' + this.$route.params.stock_id).then(function (response) {
                 console.log(response.data);
-                _this5.outstock = response.data;
-                _this5.transfer.user_id = response.data.user_id;
-                _this5.transfer.from_stock_id = response.data.id;
-                console.log(_this5.transfer);
+                _this6.outstock = response.data;
+                _this6.transfer.user_id = response.data.user_id;
+                _this6.transfer.from_stock_id = response.data.id;
+                console.log(_this6.transfer);
             });
         },
         products: function products() {
-            var _this6 = this;
+            var _this7 = this;
 
-            __WEBPACK_IMPORTED_MODULE_1_axios___default.a.get('/api/productlist').then(function (response) {
-                _this6.list = response.data;
+            __WEBPACK_IMPORTED_MODULE_1_axios___default.a.get('/api/productlist/' + this.$route.params.stock_id).then(function (response) {
+                _this7.list = response.data;
                 console.log(response.data);
             });
         },
@@ -36500,27 +36578,34 @@ function required(rule, value, source, errors, options, type) {
                 id: ''
             });
         },
+        submitContract: function submitContract() {
+            var _this8 = this;
 
+            console.log(this.contract), __WEBPACK_IMPORTED_MODULE_1_axios___default.a.post('/api/contract', this.contract).then(function (response) {
+                console.log("print response ");
+                console.log(_this8.contract);
+            });
+            this.getContracts();
+            this.contractFormVisible = false;
+        },
+
+
+        updateAmount: function updateAmount(data) {
+            data.num = data.seriallist.length;
+        },
 
         //提交序列号 判断是否重复扫描 是否已存在
         submit: function submit(data) {
             if (data.seriallist.indexOf(data.serials) != -1) {
                 alert('重复扫描');
                 data.serials = '';
+            } else if (data.stocklist.indexOf(data.serials) != -1) {
+                data.seriallist.push(data.serials);
+                data.serials = "";
+                data.num = data.seriallist.length;
             } else {
-                __WEBPACK_IMPORTED_MODULE_1_axios___default.a.get('/api/serialExist', c).then(function (response) {
-                    if (response.data == 1) {
-                        data.seriallist.push(data.serials);
-                        data.serials = "";
-                        data.num = data.seriallist.length;
-                    } else if (response.data == 2) {
-                        alert('序列号弄错产品型号');
-                        data.serials = "";
-                    } else {
-                        alert('序列号不存在');
-                        data.serials = "";
-                    }
-                });
+                alert('请输入有效序列号');
+                data.serials = "";
             }
         },
 
@@ -36535,57 +36620,46 @@ function required(rule, value, source, errors, options, type) {
             }
         },
         refreshStock: function refreshStock(item) {
-            var _this7 = this;
+            var _this9 = this;
 
             __WEBPACK_IMPORTED_MODULE_1_axios___default.a.get('/api/stock/' + item.id).then(function (response) {
-                _this7.instock = response.data;
-                console.log(_this7.instock);
-                _this7.transfer.to_stock_id = response.data.id;
+                _this9.instock = response.data;
+                console.log(_this9.instock);
+                _this9.transfer.to_stock_id = response.data.id;
             });
         },
         refreshProduct: function refreshProduct(item) {
-            //                axios.get('/api/product/' + item.id ).then((response)=>{
-            //                    if(response.data.core == 1)
-            //                    {
-            //                        item.core = 1;
-            //                        item.num = 0;
-            //                    }
-            //                    else
-            //                    {
-            //                        item.core = 0;
-            //                    }
-            ////                    item.core = response.data.core === 1;
-            //
-            //                    console.log("print response ")
-            //
-            //                    console.log(response)
-            //                });
-
-            __WEBPACK_IMPORTED_MODULE_1_axios___default.a.get('/api/product/' + item.id + '/detail', {
+            __WEBPACK_IMPORTED_MODULE_1_axios___default.a.get('/api/product/' + item.id, {
                 params: {
                     stock_id: this.$route.params.stock_id
                 }
             }).then(function (response) {
-                console.log(response.data);
-                item.max = response.data.max;
-                //                    console.log(item.max)
                 if (response.data.core == 1) {
                     item.core = 1;
+                    item.stocklist = response.data.stocklist;
                     item.num = 0;
                 } else {
                     item.core = 0;
+                    item.num = 1;
+                    item.stocklist = [];
                 }
-                item.stocklist = response.data.stocklist;
+
+                console.log("print response ");
+
+                console.log(response);
             });
             item.serials = '';
             item.seriallist = [];
         },
         postData: function postData() {
+            var _this10 = this;
+
             console.log(this.transfer);
-            //                axios.post('/transfer/' + this.$route.params.stock_id + '/trans', this.transfer).then((response)=>{
-            //                    console.log("print response ")
-            //                    console.log(this.transfer)
-            //                });
+            __WEBPACK_IMPORTED_MODULE_1_axios___default.a.post('/transfer/' + this.$route.params.stock_id + '/lend', this.transfer).then(function (response) {
+                console.log("print response ");
+                console.log(_this10.transfer);
+            });
+            window.location.href = '/transfer2?catalog=4';
         }
 
         //            remoteMethod(query) {
@@ -36760,6 +36834,43 @@ function required(rule, value, source, errors, options, type) {
 //
 //
 //
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
 
 
 //    import VueRouter from 'vue-router'
@@ -36781,6 +36892,7 @@ function required(rule, value, source, errors, options, type) {
         this.getUsers();
         this.getStocks();
         this.getOrders();
+        this.getLends();
     },
     data: function data() {
         return {
@@ -36813,6 +36925,7 @@ function required(rule, value, source, errors, options, type) {
             list: [],
             users: [],
             stocks: [],
+            lends: [],
             orders: []
         };
     },
@@ -36841,22 +36954,30 @@ function required(rule, value, source, errors, options, type) {
                 console.log(_this3.order);
             });
         },
-        send: function send() {
+        getLends: function getLends() {
             var _this4 = this;
+
+            __WEBPACK_IMPORTED_MODULE_1_axios___default.a.get('/api/lendlist/' + this.$route.params.stock_id).then(function (response) {
+                _this4.lends = response.data;
+                console.log(_this4.order);
+            });
+        },
+        send: function send() {
+            var _this5 = this;
 
             __WEBPACK_IMPORTED_MODULE_1_axios___default.a.get('/api/stock/' + this.$route.params.stock_id).then(function (response) {
                 console.log(response.data);
-                _this4.outstock = response.data;
-                _this4.transfer.user_id = response.data.user_id;
-                _this4.transfer.from_stock_id = response.data.id;
-                console.log(_this4.transfer);
+                _this5.outstock = response.data;
+                _this5.transfer.user_id = response.data.user_id;
+                _this5.transfer.from_stock_id = response.data.id;
+                console.log(_this5.transfer);
             });
         },
         products: function products() {
-            var _this5 = this;
+            var _this6 = this;
 
             __WEBPACK_IMPORTED_MODULE_1_axios___default.a.get('/api/productlist').then(function (response) {
-                _this5.list = response.data;
+                _this6.list = response.data;
                 console.log(response.data);
             });
         },
@@ -36901,12 +37022,12 @@ function required(rule, value, source, errors, options, type) {
             }
         },
         refreshStock: function refreshStock(item) {
-            var _this6 = this;
+            var _this7 = this;
 
             __WEBPACK_IMPORTED_MODULE_1_axios___default.a.get('/api/stock/' + item.id).then(function (response) {
-                _this6.instock = response.data;
-                console.log(_this6.instock);
-                _this6.transfer.to_stock_id = response.data.id;
+                _this7.instock = response.data;
+                console.log(_this7.instock);
+                _this7.transfer.to_stock_id = response.data.id;
             });
         },
         refreshProduct: function refreshProduct(item) {
@@ -36937,11 +37058,14 @@ function required(rule, value, source, errors, options, type) {
             item.seriallist = [];
         },
         postData: function postData() {
+            var _this8 = this;
+
             console.log(this.transfer);
-            //                axios.post('/transfer/' + this.$route.params.stock_id + '/trans', this.transfer).then((response)=>{
-            //                    console.log("print response ")
-            //                    console.log(this.transfer)
-            //                });
+            __WEBPACK_IMPORTED_MODULE_1_axios___default.a.post('/transfer/' + this.$route.params.stock_id + '/trans', this.transfer).then(function (response) {
+                console.log("print response ");
+                console.log(_this8.transfer);
+            });
+            window.location.href = '/transfer2?catalog=4';
         }
 
         //            remoteMethod(query) {
@@ -37558,7 +37682,7 @@ function required(rule, value, source, errors, options, type) {
 
             __WEBPACK_IMPORTED_MODULE_1_axios___default.a.get('/api/stock/' + this.$route.params.stock_id).then(function (response) {
                 console.log(response.data);
-                _this4.outstock = response.data;
+                _this4.instock = response.data;
                 _this4.transfer.user_id = response.data.user_id;
                 _this4.transfer.from_stock_id = response.data.id;
                 console.log(_this4.transfer);
@@ -83456,14 +83580,14 @@ module.exports = function (css) {
 
 
 // import TransInfo from '..components/TransInfo'
-
-
-
-
-
-
-
-
+ //采购
+ //发货
+ //调拨
+ //借出
+ //归还
+ //损耗
+ //返修
+ //维修
 
 __WEBPACK_IMPORTED_MODULE_0_vue___default.a.use(__WEBPACK_IMPORTED_MODULE_1_vue_router__["a" /* default */]);
 
@@ -84138,7 +84262,7 @@ var render = function() {
   return _c(
     "div",
     [
-      _c("h1", [_vm._v("出货单")]),
+      _c("h1", [_vm._v("发货单")]),
       _vm._v(" "),
       _c(
         "el-form",
@@ -84218,11 +84342,11 @@ var render = function() {
                   staticStyle: { width: "500px" },
                   attrs: { filterable: "" },
                   model: {
-                    value: _vm.outstock.order_id,
+                    value: _vm.transfer.order_id,
                     callback: function($$v) {
-                      _vm.$set(_vm.outstock, "order_id", $$v)
+                      _vm.$set(_vm.transfer, "order_id", $$v)
                     },
-                    expression: "outstock.order_id"
+                    expression: "transfer.order_id"
                   }
                 },
                 _vm._l(_vm.orders, function(item) {
@@ -84321,40 +84445,6 @@ var render = function() {
           _vm._v(" "),
           _c(
             "el-form-item",
-            { attrs: { label: "协议号" } },
-            [
-              _c("el-input", {
-                model: {
-                  value: _vm.transfer.contractno,
-                  callback: function($$v) {
-                    _vm.$set(_vm.transfer, "contractno", $$v)
-                  },
-                  expression: "transfer.contractno"
-                }
-              })
-            ],
-            1
-          ),
-          _vm._v(" "),
-          _c(
-            "el-form-item",
-            { attrs: { label: "发票号" } },
-            [
-              _c("el-input", {
-                model: {
-                  value: _vm.transfer.invoiceno,
-                  callback: function($$v) {
-                    _vm.$set(_vm.transfer, "invoiceno", $$v)
-                  },
-                  expression: "transfer.invoiceno"
-                }
-              })
-            ],
-            1
-          ),
-          _vm._v(" "),
-          _c(
-            "el-form-item",
             { attrs: { label: "备注" } },
             [
               _c("el-input", {
@@ -84444,11 +84534,7 @@ var render = function() {
                       { attrs: { span: 8 } },
                       [
                         _c("el-input-number", {
-                          attrs: {
-                            min: 0,
-                            max: product.max,
-                            label: "描述文字"
-                          },
+                          attrs: { min: 0, max: 1000, label: "描述文字" },
                           model: {
                             value: product.num,
                             callback: function($$v) {
@@ -84508,31 +84594,48 @@ var render = function() {
                 _c(
                   "el-row",
                   [
-                    _c(
-                      "el-col",
-                      { attrs: { span: 12, offset: 6 } },
-                      _vm._l(product.seriallist, function(tag) {
-                        return _c(
-                          "el-tag",
-                          {
-                            key: tag,
-                            attrs: { closable: "", type: "success" },
-                            on: {
-                              close: function($event) {
-                                _vm.handleClose(tag, product)
+                    _c("el-col", [
+                      _c(
+                        "div",
+                        { staticStyle: { "margin-top": "20px" } },
+                        [
+                          _c(
+                            "el-checkbox-group",
+                            {
+                              attrs: { size: "mini" },
+                              model: {
+                                value: product.seriallist,
+                                callback: function($$v) {
+                                  _vm.$set(product, "seriallist", $$v)
+                                },
+                                expression: "product.seriallist"
                               }
-                            }
-                          },
-                          [
-                            _vm._v(
-                              "\n                            " +
-                                _vm._s(tag) +
-                                "\n                    "
-                            )
-                          ]
-                        )
-                      })
-                    )
+                            },
+                            _vm._l(product.stocklist, function(serial) {
+                              return _c(
+                                "el-checkbox-button",
+                                {
+                                  key: serial,
+                                  attrs: { label: serial },
+                                  on: {
+                                    change: function($event) {
+                                      _vm.updateAmount(product)
+                                    }
+                                  }
+                                },
+                                [
+                                  _vm._v(
+                                    _vm._s(serial) +
+                                      "\n                            "
+                                  )
+                                ]
+                              )
+                            })
+                          )
+                        ],
+                        1
+                      )
+                    ])
                   ],
                   1
                 )
@@ -84778,6 +84881,7 @@ var render = function() {
           _vm._v(" "),
           _c(
             "el-form-item",
+            { attrs: { label: "入库仓" } },
             [
               _c(
                 "el-select",
@@ -84804,24 +84908,6 @@ var render = function() {
                   })
                 })
               )
-            ],
-            1
-          ),
-          _vm._v(" "),
-          _c(
-            "el-form-item",
-            { attrs: { label: "入库仓" } },
-            [
-              _c("el-input", {
-                attrs: { disabled: true },
-                model: {
-                  value: _vm.instock.name,
-                  callback: function($$v) {
-                    _vm.$set(_vm.instock, "name", $$v)
-                  },
-                  expression: "instock.name"
-                }
-              })
             ],
             1
           ),
@@ -85102,31 +85188,48 @@ var render = function() {
                 _c(
                   "el-row",
                   [
-                    _c(
-                      "el-col",
-                      { attrs: { span: 12, offset: 6 } },
-                      _vm._l(product.seriallist, function(tag) {
-                        return _c(
-                          "el-tag",
-                          {
-                            key: tag,
-                            attrs: { closable: "", type: "success" },
-                            on: {
-                              close: function($event) {
-                                _vm.handleClose(tag, product)
+                    _c("el-col", [
+                      _c(
+                        "div",
+                        { staticStyle: { "margin-top": "20px" } },
+                        [
+                          _c(
+                            "el-checkbox-group",
+                            {
+                              attrs: { size: "mini" },
+                              model: {
+                                value: product.seriallist,
+                                callback: function($$v) {
+                                  _vm.$set(product, "seriallist", $$v)
+                                },
+                                expression: "product.seriallist"
                               }
-                            }
-                          },
-                          [
-                            _vm._v(
-                              "\n                            " +
-                                _vm._s(tag) +
-                                "\n                    "
-                            )
-                          ]
-                        )
-                      })
-                    )
+                            },
+                            _vm._l(product.stocklist, function(serial) {
+                              return _c(
+                                "el-checkbox-button",
+                                {
+                                  key: serial,
+                                  attrs: { label: serial },
+                                  on: {
+                                    change: function($event) {
+                                      _vm.updateAmount(product)
+                                    }
+                                  }
+                                },
+                                [
+                                  _vm._v(
+                                    _vm._s(serial) +
+                                      "\n                            "
+                                  )
+                                ]
+                              )
+                            })
+                          )
+                        ],
+                        1
+                      )
+                    ])
                   ],
                   1
                 )
@@ -85380,11 +85483,11 @@ var render = function() {
                   staticStyle: { width: "500px" },
                   attrs: { filterable: "" },
                   model: {
-                    value: _vm.outstock.contactno,
+                    value: _vm.transfer.contractno,
                     callback: function($$v) {
-                      _vm.$set(_vm.outstock, "contactno", $$v)
+                      _vm.$set(_vm.transfer, "contractno", $$v)
                     },
-                    expression: "outstock.contactno"
+                    expression: "transfer.contractno"
                   }
                 },
                 _vm._l(_vm.contracts, function(item) {
@@ -85397,7 +85500,16 @@ var render = function() {
                     }
                   })
                 })
-              )
+              ),
+              _vm._v(" "),
+              _c("el-button", {
+                attrs: { type: "success", icon: "el-icon-plus", circle: "" },
+                on: {
+                  click: function($event) {
+                    _vm.contractFormVisible = true
+                  }
+                }
+              })
             ],
             1
           ),
@@ -85475,40 +85587,6 @@ var render = function() {
                     _vm.$set(_vm.transfer, "track_id", $$v)
                   },
                   expression: "transfer.track_id"
-                }
-              })
-            ],
-            1
-          ),
-          _vm._v(" "),
-          _c(
-            "el-form-item",
-            { attrs: { label: "协议号" } },
-            [
-              _c("el-input", {
-                model: {
-                  value: _vm.transfer.contractno,
-                  callback: function($$v) {
-                    _vm.$set(_vm.transfer, "contractno", $$v)
-                  },
-                  expression: "transfer.contractno"
-                }
-              })
-            ],
-            1
-          ),
-          _vm._v(" "),
-          _c(
-            "el-form-item",
-            { attrs: { label: "发票号" } },
-            [
-              _c("el-input", {
-                model: {
-                  value: _vm.transfer.invoiceno,
-                  callback: function($$v) {
-                    _vm.$set(_vm.transfer, "invoiceno", $$v)
-                  },
-                  expression: "transfer.invoiceno"
                 }
               })
             ],
@@ -85605,20 +85683,6 @@ var render = function() {
                       "el-col",
                       { attrs: { span: 8 } },
                       [
-                        _c(
-                          "el-tag",
-                          {
-                            model: {
-                              value: product.max,
-                              callback: function($$v) {
-                                _vm.$set(product, "max", $$v)
-                              },
-                              expression: "product.max"
-                            }
-                          },
-                          [_vm._v("库存量:" + _vm._s(product.max) + "个")]
-                        ),
-                        _vm._v(" "),
                         _c("el-input-number", {
                           attrs: {
                             min: 0,
@@ -85642,34 +85706,37 @@ var render = function() {
                           "el-col",
                           { attrs: { span: 6 } },
                           [
-                            _c(
-                              "el-checkbox-group",
-                              {
-                                model: {
-                                  value: _vm.seriallist,
-                                  callback: function($$v) {
-                                    _vm.seriallist = $$v
-                                  },
-                                  expression: "seriallist"
+                            _c("el-input", {
+                              attrs: {
+                                label: "产品编号",
+                                clearable: "",
+                                placeholder: "请输入序列号"
+                              },
+                              nativeOn: {
+                                keyup: function($event) {
+                                  if (
+                                    !("button" in $event) &&
+                                    _vm._k(
+                                      $event.keyCode,
+                                      "enter",
+                                      13,
+                                      $event.key,
+                                      "Enter"
+                                    )
+                                  ) {
+                                    return null
+                                  }
+                                  _vm.submit(product)
                                 }
                               },
-                              _vm._l(_vm.item.stocklist, function(serial, key) {
-                                return _c(
-                                  "el-checkbox",
-                                  {
-                                    key: key,
-                                    attrs: { label: key, border: "" }
-                                  },
-                                  [
-                                    _vm._v(
-                                      "\n                            " +
-                                        _vm._s(serial) +
-                                        "\n                        "
-                                    )
-                                  ]
-                                )
-                              })
-                            )
+                              model: {
+                                value: product.serials,
+                                callback: function($$v) {
+                                  _vm.$set(product, "serials", $$v)
+                                },
+                                expression: "product.serials"
+                              }
+                            })
                           ],
                           1
                         )
@@ -85681,31 +85748,48 @@ var render = function() {
                 _c(
                   "el-row",
                   [
-                    _c(
-                      "el-col",
-                      { attrs: { span: 12, offset: 6 } },
-                      _vm._l(product.seriallist, function(tag) {
-                        return _c(
-                          "el-tag",
-                          {
-                            key: tag,
-                            attrs: { closable: "", type: "success" },
-                            on: {
-                              close: function($event) {
-                                _vm.handleClose(tag, product)
+                    _c("el-col", [
+                      _c(
+                        "div",
+                        { staticStyle: { "margin-top": "20px" } },
+                        [
+                          _c(
+                            "el-checkbox-group",
+                            {
+                              attrs: { size: "mini" },
+                              model: {
+                                value: product.seriallist,
+                                callback: function($$v) {
+                                  _vm.$set(product, "seriallist", $$v)
+                                },
+                                expression: "product.seriallist"
                               }
-                            }
-                          },
-                          [
-                            _vm._v(
-                              "\n                            " +
-                                _vm._s(tag) +
-                                "\n                    "
-                            )
-                          ]
-                        )
-                      })
-                    )
+                            },
+                            _vm._l(product.stocklist, function(serial) {
+                              return _c(
+                                "el-checkbox-button",
+                                {
+                                  key: serial,
+                                  attrs: { label: serial },
+                                  on: {
+                                    change: function($event) {
+                                      _vm.updateAmount(product)
+                                    }
+                                  }
+                                },
+                                [
+                                  _vm._v(
+                                    _vm._s(serial) +
+                                      "\n                            "
+                                  )
+                                ]
+                              )
+                            })
+                          )
+                        ],
+                        1
+                      )
+                    ])
                   ],
                   1
                 )
@@ -85751,6 +85835,184 @@ var render = function() {
           )
         ],
         2
+      ),
+      _vm._v(" "),
+      _c(
+        "el-dialog",
+        {
+          attrs: { title: "新建协议", visible: _vm.contractFormVisible },
+          on: {
+            "update:visible": function($event) {
+              _vm.contractFormVisible = $event
+            }
+          }
+        },
+        [
+          _c(
+            "el-form",
+            { attrs: { model: _vm.contract } },
+            [
+              _c(
+                "el-form-item",
+                { attrs: { label: "协议名称" } },
+                [
+                  _c("el-input", {
+                    attrs: { "auto-complete": "off" },
+                    model: {
+                      value: _vm.contract.name,
+                      callback: function($$v) {
+                        _vm.$set(_vm.contract, "name", $$v)
+                      },
+                      expression: "contract.name"
+                    }
+                  })
+                ],
+                1
+              ),
+              _vm._v(" "),
+              _c(
+                "el-form-item",
+                { attrs: { label: "协议备注" } },
+                [
+                  _c("el-input", {
+                    attrs: { "auto-complete": "off" },
+                    model: {
+                      value: _vm.contract.comment,
+                      callback: function($$v) {
+                        _vm.$set(_vm.contract, "comment", $$v)
+                      },
+                      expression: "contract.comment"
+                    }
+                  })
+                ],
+                1
+              ),
+              _vm._v(" "),
+              _c(
+                "el-form-item",
+                { attrs: { label: "医院" } },
+                [
+                  _c(
+                    "el-select",
+                    {
+                      staticStyle: { width: "300px" },
+                      attrs: { filterable: "" },
+                      model: {
+                        value: _vm.contract.client_id,
+                        callback: function($$v) {
+                          _vm.$set(_vm.contract, "client_id", $$v)
+                        },
+                        expression: "contract.client_id"
+                      }
+                    },
+                    _vm._l(_vm.clients, function(item) {
+                      return _c("el-option", {
+                        key: item.id,
+                        attrs: { label: item.name, value: item.id }
+                      })
+                    })
+                  )
+                ],
+                1
+              ),
+              _vm._v(" "),
+              _c(
+                "el-form-item",
+                { attrs: { label: "代理商" } },
+                [
+                  _c(
+                    "el-select",
+                    {
+                      staticStyle: { width: "300px" },
+                      attrs: { filterable: "" },
+                      model: {
+                        value: _vm.contract.agent_id,
+                        callback: function($$v) {
+                          _vm.$set(_vm.contract, "agent_id", $$v)
+                        },
+                        expression: "contract.agent_id"
+                      }
+                    },
+                    _vm._l(_vm.agents, function(item) {
+                      return _c("el-option", {
+                        key: item.id,
+                        attrs: { label: item.name, value: item.id }
+                      })
+                    })
+                  )
+                ],
+                1
+              ),
+              _vm._v(" "),
+              _c(
+                "el-form-item",
+                { attrs: { label: "销售" } },
+                [
+                  _c(
+                    "el-select",
+                    {
+                      staticStyle: { width: "300px" },
+                      attrs: { filterable: "" },
+                      model: {
+                        value: _vm.contract.user_id,
+                        callback: function($$v) {
+                          _vm.$set(_vm.contract, "user_id", $$v)
+                        },
+                        expression: "contract.user_id"
+                      }
+                    },
+                    _vm._l(_vm.users, function(item) {
+                      return _c("el-option", {
+                        key: item.id,
+                        attrs: { label: item.name, value: item.id }
+                      })
+                    })
+                  )
+                ],
+                1
+              )
+            ],
+            1
+          ),
+          _vm._v(" "),
+          _c(
+            "div",
+            {
+              staticClass: "dialog-footer",
+              attrs: { slot: "footer" },
+              slot: "footer"
+            },
+            [
+              _c(
+                "el-button",
+                {
+                  on: {
+                    click: function($event) {
+                      _vm.contractFormVisible = false
+                    }
+                  }
+                },
+                [_vm._v("取 消")]
+              ),
+              _vm._v(" "),
+              _c(
+                "el-button",
+                {
+                  attrs: { type: "primary" },
+                  on: {
+                    click: function($event) {
+                      _vm.contractFormVisible = false
+                      _vm.submitContract()
+                    }
+                  }
+                },
+                [_vm._v("确 定")]
+              )
+            ],
+            1
+          )
+        ],
+        1
       )
     ],
     1
@@ -85879,7 +86141,41 @@ var render = function() {
   return _c(
     "div",
     [
-      _c("h1", [_vm._v("出货单")]),
+      _c("h1", [_vm._v("归还单")]),
+      _vm._v(" "),
+      _c(
+        "el-table",
+        {
+          staticStyle: { width: "100%" },
+          attrs: { data: _vm.lends, "max-height": "250" }
+        },
+        [
+          _c("el-table-column", {
+            attrs: { fixed: "", prop: "id", label: "序号" }
+          }),
+          _vm._v(" "),
+          _c("el-table-column", {
+            attrs: { fixed: "", prop: "user", label: "出库员" }
+          }),
+          _vm._v(" "),
+          _c("el-table-column", {
+            attrs: { fixed: "", prop: "hospital", label: "医院" }
+          }),
+          _vm._v(" "),
+          _c("el-table-column", {
+            attrs: { fixed: "", prop: "agent", label: "代理商" }
+          }),
+          _vm._v(" "),
+          _c("el-table-column", {
+            attrs: { fixed: "", prop: "comment", label: "备注" }
+          }),
+          _vm._v(" "),
+          _c("el-table-column", {
+            attrs: { fixed: "", prop: "ship_at", label: "发货期" }
+          })
+        ],
+        1
+      ),
       _vm._v(" "),
       _c(
         "el-form",
@@ -87015,7 +87311,7 @@ var render = function() {
   return _c(
     "div",
     [
-      _c("h1", [_vm._v("出货单")]),
+      _c("h1", [_vm._v("返修单")]),
       _vm._v(" "),
       _c(
         "el-form",
@@ -87023,16 +87319,16 @@ var render = function() {
         [
           _c(
             "el-form-item",
-            { attrs: { label: "出库仓" } },
+            { attrs: { label: "入库仓" } },
             [
               _c("el-input", {
                 attrs: { disabled: true },
                 model: {
-                  value: _vm.outstock.name,
+                  value: _vm.instock.name,
                   callback: function($$v) {
-                    _vm.$set(_vm.outstock, "name", $$v)
+                    _vm.$set(_vm.instock, "name", $$v)
                   },
-                  expression: "outstock.name"
+                  expression: "instock.name"
                 }
               })
             ],
@@ -87041,16 +87337,16 @@ var render = function() {
           _vm._v(" "),
           _c(
             "el-form-item",
-            { attrs: { label: "出库地址" } },
+            { attrs: { label: "入库地址" } },
             [
               _c("el-input", {
                 attrs: { disabled: true },
                 model: {
-                  value: _vm.outstock.address,
+                  value: _vm.instock.address,
                   callback: function($$v) {
-                    _vm.$set(_vm.outstock, "address", $$v)
+                    _vm.$set(_vm.instock, "address", $$v)
                   },
-                  expression: "outstock.address"
+                  expression: "instock.address"
                 }
               })
             ],
@@ -87059,7 +87355,7 @@ var render = function() {
           _vm._v(" "),
           _c(
             "el-form-item",
-            { attrs: { label: "出库员" } },
+            { attrs: { label: "入库员" } },
             [
               _c(
                 "el-select",
@@ -87067,11 +87363,11 @@ var render = function() {
                   staticStyle: { width: "300px" },
                   attrs: { filterable: "" },
                   model: {
-                    value: _vm.outstock.user_id,
+                    value: _vm.instock.user_id,
                     callback: function($$v) {
-                      _vm.$set(_vm.outstock, "user_id", $$v)
+                      _vm.$set(_vm.instock, "user_id", $$v)
                     },
-                    expression: "outstock.user_id"
+                    expression: "instock.user_id"
                   }
                 },
                 _vm._l(_vm.users, function(item) {

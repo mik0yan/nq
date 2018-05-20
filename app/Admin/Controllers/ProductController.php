@@ -189,9 +189,48 @@ class ProductController extends Controller
         });
     }
 
-    public function api_show($id)
+    public function stocklist($id)
     {
-        return Product::find($id);
+        $res = collect(Stock::find($id)->amountProducts())->filter(function($num){
+            return $num>0;
+        })->keys();
+        return Product::whereIn('id',$res)->get()->map(function($product){
+            return [
+                'id' => $product->id,
+                'core'=> $product->core,
+                'name'=> $product->name.$product->desc,
+            ];
+        });
+    }
+
+    public function api_reserve($id)
+    {
+        $res = collect(Stock::find($id)->amountProducts())->filter(function($num){
+            return $num>0;
+        })->keys();
+        return Product::whereIn('id',$res)->get()->map(function($product){
+            return [
+                'id' => $product->id,
+                'core'=> $product->core,
+                'name'=> $product->name.$product->desc,
+            ];
+        });
+    }
+
+    public function api_show(Request $rq , $id)
+    {
+        $data = $rq->all();
+        if(isSet($data['stock_id']))
+        {
+            $num =  Stock::find($data['stock_id'])->amountProducts();
+            $p = Product::find($id);
+            $p['num'] = $num[$id];
+            if($p->core == 1)
+                $p['stocklist']=Serials::where('product_id',$id)->where('stock_id',$data['stock_id'])->pluck('serial_no');
+            return $p;
+        }
+        else
+            return Product::find($id);
     }
 
 //    查找该产品在库存量

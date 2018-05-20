@@ -1,17 +1,17 @@
 <template>
     <div>
-        <h1>出货单</h1>
+        <h1>返修单</h1>
 
         <el-form label-position ='right' label-width="120px">
-            <el-form-item  label="出库仓" >
-                <el-input v-model="outstock.name" :disabled="true"></el-input>
+            <el-form-item  label="入库仓" >
+                <el-input v-model="instock.name" :disabled="true"></el-input>
             </el-form-item>
-            <el-form-item  label="出库地址">
-                <el-input v-model="outstock.address" :disabled="true"></el-input>
+            <el-form-item  label="入库地址">
+                <el-input v-model="instock.address" :disabled="true"></el-input>
             </el-form-item>
-            <el-form-item  label="出库员">
+            <el-form-item  label="入库员">
                 <el-select
-                        v-model="outstock.user_id"
+                        v-model="instock.user_id"
                         filterable
                         style="width: 300px">
                     <el-option
@@ -224,9 +224,9 @@
             },
 
             send(){
-                axios.get('/api/stock/'+this.$route.params.stock_id).then((response) => {
+                axios.get('/api/stock/' + this.$route.params.stock_id ). then((response) => {
                     console.log(response.data);
-                    this.outstock = response.data;
+                    this.instock = response.data;
                     this.transfer.user_id = response.data.user_id
                     this.transfer.from_stock_id = response.data.id
                     console.log(this.transfer);

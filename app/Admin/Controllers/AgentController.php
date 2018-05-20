@@ -111,4 +111,16 @@ class AgentController extends Controller
 //            $form->display('updated_at', 'Updated At');
         });
     }
+
+
+    public function list()
+    {
+        return Agent::orderBy('updated_at','desc')->get()->map(function($agent){
+            return [
+                'id' => $agent->id,
+                'name'=>"【{$agent->corp}】公司:联系人【{$agent->name}】",
+//                'disabled'=> $order->status < 7
+            ];
+        });
+    }
 }
