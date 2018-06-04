@@ -63,15 +63,31 @@ Route::group([
         $router->post('{stock_id}/trans' ,'TransferController@postTrans');
         $router->post('{stock_id}/ship' ,'TransferController@postShip');
         $router->post('{stock_id}/lend' ,'TransferController@postLend');
-//        $router->get('{transfer_id}/add' ,'TransferController@newline2');
-//        $router->get('{transfer_id}/item' ,'TransferController@item');
-//        $router->get('{transfer_id}/check' ,'TransferController@check');
+        $router->post('{stock_id}/return' ,'TransferController@postReturn');
+        $router->post('{stock_id}/rework' ,'TransferController@postRework');
+        $router->post('{stock_id}/loss' ,'TransferController@postLoss');
+    });
+
+    $router->group(['prefix'=>'mystock'], function (Router $router) {
+        $router->get('{stock_id}' ,function($stock){
+            return view('transfer.create',['title'=>$stock]);
+        })->where('any', '.*');
+//        $router->post('{stock_id}/purchase' ,'TransferController@postPurchase');
+//        $router->post('{stock_id}/trans' ,'TransferController@postTrans');
+//        $router->post('{stock_id}/ship' ,'TransferController@postShip');
+//        $router->post('{stock_id}/lend' ,'TransferController@postLend');
+//        $router->post('{stock_id}/return' ,'TransferController@postReturn');
+//        $router->post('{stock_id}/rework' ,'TransferController@postRework');
+//        $router->post('{stock_id}/loss' ,'TransferController@postLoss');
     });
 
     $router->group(['prefix'=>'api'], function (Router $router) {
 //        仓库详情
         $router->get('stock/{stock_id}' ,'StockController@api_show');
         $router->get('stocklist' ,'StockController@list');
+        $router->get('stock/{id}/store' ,'StockController@api_store');
+
+
 //        商品列表
         $router->get('productlist','ProductController@list');
         $router->get('productlist/{stock_id}','ProductController@stocklist');

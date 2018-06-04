@@ -149,9 +149,14 @@ class Stock extends Model
                     'transfer' => "出货",
                     'title'=>'ship'
                 ],
+                [
+                    'type'=>6,
+                    'transfer' => "退货(换机)",
+                    'title'=>'rework'
+                ],
             ];
         }
-        elseif($this->type == 6)
+        elseif($this->type == 6) //借出、展机库
         {
             return [
                 [
@@ -176,7 +181,32 @@ class Stock extends Model
                 ]
             ];
         }
-        elseif($this->type == 2)
+        elseif($this->type == 4)  //维修库
+        {
+            return [
+                [
+                    'type' => 2,
+                    'transfer' => "调拨",
+                    'title'=>'trans'
+                ],
+                [
+                    'type' => 3,
+                    'transfer' => "出货",
+                    'title'=>'ship'
+                ],
+                [
+                    'type' => 4,
+                    'transfer' => "借出",
+                    'title'=>'lend'
+                ],
+                [
+                    'type' => 5,
+                    'transfer' => "换机",
+                    'title'=>'return'
+                ]
+            ];
+        }
+        elseif($this->type == 2)  //海关库
         {
             return [
                 [

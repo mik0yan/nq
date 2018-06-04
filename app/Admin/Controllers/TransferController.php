@@ -703,6 +703,100 @@ class TransferController extends Controller
         ];
     }
 
+    public function postRework(Request $rq)
+    {
+        $data =  $rq->json()->all();
+        if( isSet($data['to_stock_id']))
+        {
+            $t = new Transfer;
+            $t->catalog = 6;
+            $t->contractno = $data['contractno'];
+            $t->comment = $data['comment'];
+            $t->track_id = $data['track_id'];
+            $t->to_stock_id = $data['to_stock_id'];
+            $t->ship_at = $data['ship_at'];
+            $t->user_id = $data['user_id'];
+            $t->arrival_at = $data['arrival_at'];
+            $t->save();
+            foreach ($data['list'] as $item) {
+                Log::info("make item  ". json_encode($item));
+                $ps = new Product_stock;
+                $ps->product_id = $item['id'];
+                $ps->transfer_id = $t->id;
+                $ps->amount = $item['num'];
+                $ps->status = 3;
+                $ps->save();
+                if($item['core'])
+                {
+                    foreach ($item['seriallist'] as $serial)
+                    {
+                        if($ss = Serials::where('serial_no',$serial)->where('product_id',$item['id'])->first())
+                        {
+                            $ss->transfer_id = $t->id;
+                            $ss->stock_id = $t->to_stock_id;
+                            $ss->save();
+                            $ss->transfers()->attach($t->id);
+                        }
+
+                    }
+                }
+            }
+        }
+
+        return [
+            "code" => 200,
+            "message" => "success",
+            "data"=>$data
+        ];
+    }
+
+
+    public function postReturn(Request $rq)
+    {
+        $data =  $rq->json()->all();
+        if( isSet($data['to_stock_id']))
+        {
+            $t = new Transfer;
+            $t->catalog = 5;
+            $t->contractno = $data['contractno'];
+            $t->comment = $data['comment'];
+            $t->track_id = $data['track_id'];
+            $t->to_stock_id = $data['to_stock_id'];
+            $t->ship_at = $data['ship_at'];
+            $t->user_id = $data['user_id'];
+            $t->arrival_at = $data['arrival_at'];
+            $t->save();
+            foreach ($data['list'] as $item) {
+                Log::info("make item  ". json_encode($item));
+                $ps = new Product_stock;
+                $ps->product_id = $item['id'];
+                $ps->transfer_id = $t->id;
+                $ps->amount = $item['num'];
+                $ps->status = 3;
+                $ps->save();
+                if($item['core'])
+                {
+                    foreach ($item['seriallist'] as $serial)
+                    {
+                        if($ss = Serials::where('serial_no',$serial)->where('product_id',$item['id'])->first())
+                        {
+                            $ss->transfer_id = $t->id;
+                            $ss->stock_id = $t->to_stock_id;
+                            $ss->save();
+                            $ss->transfers()->attach($t->id);
+                        }
+
+                    }
+                }
+            }
+        }
+
+        return [
+            "code" => 200,
+            "message" => "success",
+            "data"=>$data
+        ];
+    }
 
 //    借出清单
     public function lendlist($id)

@@ -117,6 +117,8 @@ class SerialController extends Controller
 
                 $filter->in('transfer_id', '销售发货单')->select(Transfer::where('catalog','3')->pluck('invoiceno','id'));
 
+                $filter->equal('serial_no', '序列号');
+
                 $filter->where(function ($query) {
 
                     $query->where('serial_no', 'like', "%{$this->input}%")

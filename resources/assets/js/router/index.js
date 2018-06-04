@@ -9,6 +9,7 @@ import Return from '../components/Return.vue';  //归还
 import Loss from '../components/Loss.vue'; //损耗
 import Rework from '../components/Rework.vue'; //返修
 import Repair from '../components/Repair.vue'; //维修
+import Stock from '../components/Stock.vue'; //维修
 
 Vue.use(VueRouter);
 
@@ -25,6 +26,8 @@ export default new VueRouter({
         { path: '/transfer/:stock_id/repair', component: Repair , props: true },
         { path: '/transfer/:stock_id/rework', component: Rework , props: true },
         { path: '/transfer/:stock_id/loss', component: Loss , props: true },
+        { path: '/mystock/:stock_id', component: Stock , props: true },
+
     ]
 });
 

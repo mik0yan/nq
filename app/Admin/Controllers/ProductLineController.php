@@ -130,7 +130,7 @@ class ProductLineController extends Controller
             $grid->product()->name('产品名');
             $grid->transfer()->comment('备注');
             $grid->product()->sku('物料');
-            $grid->remark('详情');
+//            $grid->remark('详情');
             $grid->amount('数量')->editable();
             $grid->column('e','序列号')->display(function(){
                 $transferId = Product_stock::find($this->id)->transfer_id;

@@ -46,7 +46,7 @@ EOT;
             8     => '合格',
             9     => '损耗',
         ];
-
+//        T1:采购,T2:调拨,T3:出库,T4:借出,T5:归还,T6.返修,T7:修理,T8:合格,T9:损耗
         return view('admin.tools.transfercatalog', compact('options'));
     }
 }

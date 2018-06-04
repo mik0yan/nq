@@ -480,4 +480,66 @@ class StockController extends Controller
     }
 
 
+    public function api_store($id)
+    {
+        $products = Stock::find($id)->amountProducts();
+        $core = [];
+        $noncore = [];
+        $zero = [];
+        foreach ($products as $k=>$v)
+        {
+            $product = Product::find($k);
+            if($v == 0)
+            {
+                $zero[] = [
+                    'id' => $k,
+                    'name'=>$product->name,
+                    'sku'=>$product->sku,
+                    'item'=>$product->item,
+                    'desc'=>$product->desc,
+                    'num' => 0,
+                    'serials'=>[],
+                ];
+            }
+            elseif ($product->core == 1)
+            {
+                $serials = Serials::where('product_id',$k)->where('stock_id',$id)->get()->map(function ($serial){
+                    return [
+                        "id" => $serial->id,
+                        "serial_no" => $serial->serial_no,
+                        "comment" => $serial->comment,
+                    ];
+                });
+                $core[] = [
+                    'id' => $k,
+                    'name'=>$product->name,
+                    'sku'=>$product->sku,
+                    'item'=>$product->item,
+                    'desc'=>$product->desc,
+                    'num' => $v,
+                    'serials'=>$serials,
+                ];
+            }
+            elseif ($product->core == 2)
+            {
+                $noncore[] = [
+                    'id' => $k,
+                    'name'=>$product->name,
+                    'sku'=>$product->sku,
+                    'item'=>$product->item,
+                    'desc'=>$product->desc,
+                    'num' => $v,
+                    'serials'=>[],
+                ];
+            }
+        }
+
+        return [
+            'core' => $core,
+            'noncore' => $noncore,
+            'zero' => $zero,
+        ];
+    }
+
+
 }

@@ -229,6 +229,14 @@ class ProductController extends Controller
                 $p['stocklist']=Serials::where('product_id',$id)->where('stock_id',$data['stock_id'])->pluck('serial_no');
             return $p;
         }
+        elseif(isSet($data['shipped']))
+        {
+            $p = Product::find($id);
+            $p['num'] = 100;
+            if($p->core == 1)
+                $p['stocklist']=Serials::where('product_id',$id)->whereNull('stock_id')->pluck('serial_no');
+            return $p;
+        }
         else
             return Product::find($id);
     }
